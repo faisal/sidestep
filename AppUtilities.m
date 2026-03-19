@@ -41,12 +41,12 @@ void _XLog(CFAbsoluteTime *lastTime, NSString *format, va_list argList)
 	}
 	 */
 	
-	CFStringRef log = CFStringCreateWithFormatAndArguments(NULL, NULL, (CFStringRef)format, argList);
+	CFStringRef log = CFStringCreateWithFormatAndArguments(NULL, NULL, (__bridge CFStringRef)format, argList);
 	char *ptr = (char *)CFStringGetCStringPtr(log, kCFStringEncodingUTF8);
 	if (ptr) 	
 		NSLog(@"%s\n", ptr);
 	else {
-		unsigned buflen = CFStringGetLength(log) * 4;
+		unsigned buflen = CFStringGetLength(log) * 4 + 1;
 		ptr = malloc(buflen);
 		if (CFStringGetCString(log, ptr, buflen, kCFStringEncodingUTF8));
 		NSLog(@"%s\n", ptr);
@@ -79,15 +79,9 @@ void XFTimeLog(id object, CFAbsoluteTime *time, NSString *format, ...)
 	}
 }
 
-- (bool) object: (NSObject *) object existsInArray: (NSArray *) array
+- (BOOL)object:(NSObject *)object existsInArray:(NSArray *)array
 {
-    int loopIter = 0;
-    while (loopIter < [array count])
-    {
-        if ([[array objectAtIndex:loopIter] isEqualTo:object]) return true;
-        loopIter++;
-    }
-    return false;
+    return [array containsObject:object];
 }
 
 @end
