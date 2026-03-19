@@ -7,11 +7,11 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import <UserNotifications/UserNotifications.h>
 
-@interface GrowlMessage : NSObject {
-	NSUserDefaults *setting;
-}
+@interface GrowlMessage : NSObject <UNUserNotificationCenterDelegate>
 
-- (void) message:(NSString *)sendMessage;
+- (void)requestAuthorization;
+- (void)message:(NSString *)sendMessage;
 
 @end

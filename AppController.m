@@ -97,7 +97,9 @@ NSInteger GrowlSpam_TestConnection					= 0;
  */
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-	
+
+	[growl requestAuthorization];
+
 	int previousPID = [defaultsController getSSHConnectionPID];
 	
 	
