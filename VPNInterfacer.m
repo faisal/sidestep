@@ -8,142 +8,145 @@
 
 #import "VPNInterfacer.h"
 #import "AppUtilities.h"
-
+#import <SystemConfiguration/SystemConfiguration.h>
 
 @implementation VPNInterfacer
 
 /*
- *	Gets a list of VPN services that have been configured in System Preferences > Network.
+ *	Gets a list of VPN services configured in System Settings > Network.
+ *	Uses SystemConfiguration framework to enumerate network services and
+ *	filter for PPP or IPSec interface types (VPN services).
  *
- *	return: (NSArray *)services on success
- *	return: nil if task path not found
+ *	return: (NSArray *)services — array of VPN service name strings
  */
-
 - (NSArray *)getListOfVPNServices {
 
 	XLog(self, @"Getting list of VPN services");
-	
-	NSTask *task = [[NSTask alloc] init];
 
-	// Setup the pipes on the task
-	NSPipe *outputPipe = [NSPipe pipe];
-	NSPipe *errorPipe = [NSPipe pipe];
-
-	[task setStandardOutput:outputPipe];
-	[task setStandardInput:[NSFileHandle fileHandleWithNullDevice]];
-	[task setStandardError:errorPipe];
-
-	// Get the path of the task, which is included as part of the main application bundle
-	NSString *taskPath = [NSBundle pathForResource:@"GetListOfVPNServices"
-											ofType:@"sh"
-									   inDirectory:[[NSBundle mainBundle] bundlePath]];
-	
-	if (!taskPath) {
-		return nil;
+	SCPreferencesRef prefs = SCPreferencesCreate(kCFAllocatorDefault, CFSTR("com.faisal.Sidestep"), NULL);
+	if (!prefs) {
+		XLog(self, @"SCPreferencesCreate failed");
+		return @[];
 	}
-	
-	// Set task's launch path
-	[task setLaunchPath:taskPath];
-	
-	// Before launching the task, get a filehandle for reading its output
-	NSFileHandle *readHandle = [[task standardOutput] fileHandleForReading];
-	
-	// Launch task
-	[task launch];
-	
-	// Read task's output data
-	NSData *readData;
-	while ((readData = [readHandle availableData]) && [readData length]) {
-		NSString *readString = [[NSString alloc] initWithData:readData encoding:NSASCIIStringEncoding];
-		
-		XLog(self, @"Get list of VPN services said: %@", readString);
-		
-		//	Return values of Get List Of VPN Services:
-		//		Comma-seperated list of service names
-		
-		NSString *csvList = [readString stringByTrimmingCharactersInSet:[NSCharacterSet newlineCharacterSet]];
-		XLog(self, @"Comma-separated list of VPN services: %@", csvList);
-		
-		if ([csvList isEqualToString:@""]) {
-			XLog(self, @"No services found.");
-			return [NSArray arrayWithObjects:nil];
-		}
-		else {
-			return [csvList componentsSeparatedByString:@", "];
+
+	CFArrayRef allServices = SCNetworkServiceCopyAll(prefs);
+	if (!allServices) {
+		CFRelease(prefs);
+		XLog(self, @"SCNetworkServiceCopyAll failed");
+		return @[];
+	}
+
+	NSMutableArray *vpnServices = [NSMutableArray array];
+	CFIndex count = CFArrayGetCount(allServices);
+
+	for (CFIndex i = 0; i < count; i++) {
+		SCNetworkServiceRef service = (SCNetworkServiceRef)CFArrayGetValueAtIndex(allServices, i);
+		SCNetworkInterfaceRef iface = SCNetworkServiceGetInterface(service);
+		if (!iface) continue;
+
+		CFStringRef ifaceType = SCNetworkInterfaceGetInterfaceType(iface);
+		if (ifaceType &&
+			(CFStringCompare(ifaceType, kSCNetworkInterfaceTypePPP, 0) == kCFCompareEqualTo ||
+			 CFStringCompare(ifaceType, kSCNetworkInterfaceTypeIPSec, 0) == kCFCompareEqualTo)) {
+			NSString *name = (__bridge NSString *)SCNetworkServiceGetName(service);
+			if (name) {
+				[vpnServices addObject:name];
+				XLog(self, @"Found VPN service: %@", name);
+			}
 		}
 	}
-	
-	// If we get this far, that means the task didn't output anything for some reason.
-	// Return empty array.
-	return [NSArray arrayWithObjects:nil];
-	
+
+	CFRelease(allServices);
+	CFRelease(prefs);
+
+	XLog(self, @"VPN services found: %@", vpnServices);
+	return vpnServices;
 }
 
 /*
  *	Turns on or off the VPN connection for the service name given.
  *
- *	return: result code on success
- *	return: 0 task path not found
+ *	return: 1 = success
+ *	return: 0 = failure (could not create connection or start/stop failed)
+ *	return: 2 = no such service
+ *	return: 3 = service found was not of type VPN
  */
-
 - (BOOL)turnVPNOnOrOff:(NSString *)serviceName withState:(BOOL)state {
-	
-	XLog(self, @"Turning VPN on with service name: %@", serviceName);
-	
-	NSTask *task = [[NSTask alloc] init];
 
-	// Setup the pipes on the task
-	NSPipe *outputPipe = [NSPipe pipe];
-	NSPipe *errorPipe = [NSPipe pipe];
+	XLog(self, @"Turning VPN %@ with service name: %@", state ? @"on" : @"off", serviceName);
 
-	[task setStandardOutput:outputPipe];
-	[task setStandardInput:[NSFileHandle fileHandleWithNullDevice]];
-	[task setStandardError:errorPipe];
-
-	// Set up arguments to the task
-	NSArray *args = [NSArray arrayWithObjects:	[NSString stringWithString:serviceName],
-					 [NSString stringWithFormat:@"%d", state],
-					 nil];
-	
-	// Get the path of the task, which is included as part of the main application bundle
-	NSString *taskPath = [NSBundle pathForResource:@"TurnVPNOnOrOff"
-											ofType:@"sh"
-									   inDirectory:[[NSBundle mainBundle] bundlePath]];
-	
-	if (!taskPath) {
+	SCPreferencesRef prefs = SCPreferencesCreate(kCFAllocatorDefault, CFSTR("com.faisal.Sidestep"), NULL);
+	if (!prefs) {
+		XLog(self, @"SCPreferencesCreate failed");
 		return 0;
 	}
-	
-	// Set task's arguments and launch path
-	[task setArguments:args];
-	[task setLaunchPath:taskPath];
-	
-	// Before launching the task, get a filehandle for reading its output
-	NSFileHandle *readHandle = [[task standardOutput] fileHandleForReading];
-	
-	// Launch task
-	[task launch];
-	
-	// Read task's output data
-	NSData *readData;
-	int result = 0;
-	while ((readData = [readHandle availableData]) && [readData length]) {
-		NSString *readString = [[NSString alloc] initWithData:readData encoding:NSASCIIStringEncoding];
-		
-		XLog(self, @"Turn VPN On said: %@", readString);
-		
-		//	Return values of Turn VPN On:
-		//		1 - Success
-		//		2 - No such service
-		//		3 - Service found was not of type VPN
-		
-		if (![readString isEqualToString:@"\n"]) {
-			result = [readString intValue];
+
+	CFArrayRef allServices = SCNetworkServiceCopyAll(prefs);
+	if (!allServices) {
+		CFRelease(prefs);
+		XLog(self, @"SCNetworkServiceCopyAll failed");
+		return 0;
+	}
+
+	// Find the service by name
+	SCNetworkServiceRef targetService = NULL;
+	CFIndex count = CFArrayGetCount(allServices);
+
+	for (CFIndex i = 0; i < count; i++) {
+		SCNetworkServiceRef service = (SCNetworkServiceRef)CFArrayGetValueAtIndex(allServices, i);
+		NSString *name = (__bridge NSString *)SCNetworkServiceGetName(service);
+		if ([name isEqualToString:serviceName]) {
+			targetService = service;
+			break;
 		}
 	}
-	
-	return result;
-	
+
+	if (!targetService) {
+		XLog(self, @"No service found with name: %@", serviceName);
+		CFRelease(allServices);
+		CFRelease(prefs);
+		return 2;
+	}
+
+	// Verify it's a VPN-type service
+	SCNetworkInterfaceRef iface = SCNetworkServiceGetInterface(targetService);
+	CFStringRef ifaceType = iface ? SCNetworkInterfaceGetInterfaceType(iface) : NULL;
+
+	if (!ifaceType ||
+		(CFStringCompare(ifaceType, kSCNetworkInterfaceTypePPP, 0) != kCFCompareEqualTo &&
+		 CFStringCompare(ifaceType, kSCNetworkInterfaceTypeIPSec, 0) != kCFCompareEqualTo)) {
+		XLog(self, @"Service '%@' is not a VPN type", serviceName);
+		CFRelease(allServices);
+		CFRelease(prefs);
+		return 3;
+	}
+
+	// Get the service ID and create a connection
+	CFStringRef serviceID = SCNetworkServiceGetServiceID(targetService);
+	SCNetworkConnectionRef connection = SCNetworkConnectionCreateWithServiceID(
+		kCFAllocatorDefault, serviceID, NULL, NULL);
+
+	if (!connection) {
+		XLog(self, @"SCNetworkConnectionCreateWithServiceID failed for service: %@", serviceName);
+		CFRelease(allServices);
+		CFRelease(prefs);
+		return 0;
+	}
+
+	BOOL result;
+	if (state) {
+		result = SCNetworkConnectionStart(connection, NULL, TRUE);
+		XLog(self, @"SCNetworkConnectionStart result: %d", result);
+	} else {
+		result = SCNetworkConnectionStop(connection, TRUE);
+		XLog(self, @"SCNetworkConnectionStop result: %d", result);
+	}
+
+	CFRelease(connection);
+	CFRelease(allServices);
+	CFRelease(prefs);
+
+	return result ? 1 : 0;
 }
 
 @end

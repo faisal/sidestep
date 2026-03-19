@@ -9,11 +9,10 @@
 /* Begin PBXBuildFile section */
 		AABB000100000000SM000006 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AABB000100000000SM000005 /* ServiceManagement.framework */; };
 		AABB000100000000UN000006 /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AABB000100000000UN000005 /* UserNotifications.framework */; };
+		AABB000100000000CW000002 /* CoreWLAN.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AABB000100000000CW000001 /* CoreWLAN.framework */; };
 		1DDD58160DA1D0A300B32029 /* Sidestep.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DDD58140DA1D0A300B32029 /* Sidestep.xib */; };
 		256AC3DA0F4B6AC300CF3369 /* AppController.m in Sources */ = {isa = PBXBuildFile; fileRef = 256AC3D90F4B6AC300CF3369 /* AppController.m */; };
-		613F9CFF12AC924D00B13A60 /* TurnVPNOnOrOff.sh in Resources */ = {isa = PBXBuildFile; fileRef = 613F9CFE12AC924D00B13A60 /* TurnVPNOnOrOff.sh */; };
 		613F9D2A12AD8D4300B13A60 /* VPNInterfacer.m in Sources */ = {isa = PBXBuildFile; fileRef = 613F9D2912AD8D4300B13A60 /* VPNInterfacer.m */; };
-		613F9D9812AD915A00B13A60 /* GetListOfVPNServices.sh in Resources */ = {isa = PBXBuildFile; fileRef = 613F9D9712AD915A00B13A60 /* GetListOfVPNServices.sh */; };
 		6145B218127A6AC600A5F7AF /* SSHConnector.m in Sources */ = {isa = PBXBuildFile; fileRef = 6145B217127A6AC600A5F7AF /* SSHConnector.m */; };
 		6145B2E0127A739200A5F7AF /* AppUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = 6145B2DF127A739200A5F7AF /* AppUtilities.m */; };
 		6145B306127A746400A5F7AF /* Configurations.m in Sources */ = {isa = PBXBuildFile; fileRef = 6145B305127A746400A5F7AF /* Configurations.m */; };
@@ -37,13 +36,10 @@
 		61B3E46C127A7BC20011E198 /* SSHAskPass.m in Sources */ = {isa = PBXBuildFile; fileRef = 6145B3BF127A78AD00A5F7AF /* SSHAskPass.m */; };
 		61B3E4AE127A7BD00011E198 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6145B3B1127A780A00A5F7AF /* Security.framework */; };
 		61B3E4D0127A7D3B0011E198 /* SSHAskPass in Resources */ = {isa = PBXBuildFile; fileRef = 61B3E4B2127A7BE30011E198 /* SSHAskPass */; };
-		61B3E58F127ABBEB0011E198 /* TurnProxyOff.sh in Resources */ = {isa = PBXBuildFile; fileRef = 61B3E58C127ABBEB0011E198 /* TurnProxyOff.sh */; };
-		61B3E590127ABBEB0011E198 /* TurnProxyOn.sh in Resources */ = {isa = PBXBuildFile; fileRef = 61B3E58D127ABBEB0011E198 /* TurnProxyOn.sh */; };
 		61B3E63B127ACB420011E198 /* DefaultsController.m in Sources */ = {isa = PBXBuildFile; fileRef = 61B3E63A127ACB420011E198 /* DefaultsController.m */; };
 		61B3E827127BA7A50011E198 /* WatchSSHConnectionForChanges.sh in Resources */ = {isa = PBXBuildFile; fileRef = 61B3E825127BA7A50011E198 /* WatchSSHConnectionForChanges.sh */; };
 		61BA522212823CF100BD1D72 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 61BA522112823CF100BD1D72 /* Sparkle.framework */; };
 		61BA523112823D4300BD1D72 /* Sparkle.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 61BA522112823CF100BD1D72 /* Sparkle.framework */; };
-		61FB5E5E127FC469003229D7 /* GetNetworkSecurityType.sh in Resources */ = {isa = PBXBuildFile; fileRef = 61FB5E5D127FC469003229D7 /* GetNetworkSecurityType.sh */; };
 		61FB5F5A1280E970003229D7 /* ProxySetter.m in Sources */ = {isa = PBXBuildFile; fileRef = 61FB5F591280E970003229D7 /* ProxySetter.m */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
@@ -103,10 +99,8 @@
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
-		613F9CFE12AC924D00B13A60 /* TurnVPNOnOrOff.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = TurnVPNOnOrOff.sh; path = scripts/TurnVPNOnOrOff.sh; sourceTree = "<group>"; };
 		613F9D2812AD8D4300B13A60 /* VPNInterfacer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VPNInterfacer.h; sourceTree = "<group>"; };
 		613F9D2912AD8D4300B13A60 /* VPNInterfacer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VPNInterfacer.m; sourceTree = "<group>"; };
-		613F9D9712AD915A00B13A60 /* GetListOfVPNServices.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = GetListOfVPNServices.sh; path = scripts/GetListOfVPNServices.sh; sourceTree = "<group>"; };
 		6145B216127A6AC600A5F7AF /* SSHConnector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSHConnector.h; sourceTree = "<group>"; };
 		6145B217127A6AC600A5F7AF /* SSHConnector.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSHConnector.m; sourceTree = "<group>"; };
 		6145B2DE127A739100A5F7AF /* AppUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppUtilities.h; sourceTree = "<group>"; };
@@ -134,19 +128,17 @@
 		61A926931299C11100B6B66B /* EMKeychainItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMKeychainItem.m; sourceTree = "<group>"; };
 		61A9285E129BB3D100B6B66B /* main-icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "main-icon.icns"; sourceTree = "<group>"; };
 		61B3E4B2127A7BE30011E198 /* SSHAskPass */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = SSHAskPass; sourceTree = BUILT_PRODUCTS_DIR; };
-		61B3E58C127ABBEB0011E198 /* TurnProxyOff.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = TurnProxyOff.sh; path = scripts/TurnProxyOff.sh; sourceTree = SOURCE_ROOT; };
-		61B3E58D127ABBEB0011E198 /* TurnProxyOn.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = TurnProxyOn.sh; path = scripts/TurnProxyOn.sh; sourceTree = SOURCE_ROOT; };
 		61B3E639127ACB420011E198 /* DefaultsController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DefaultsController.h; sourceTree = "<group>"; };
 		61B3E63A127ACB420011E198 /* DefaultsController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DefaultsController.m; sourceTree = "<group>"; };
 		61B3E825127BA7A50011E198 /* WatchSSHConnectionForChanges.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = WatchSSHConnectionForChanges.sh; path = scripts/WatchSSHConnectionForChanges.sh; sourceTree = SOURCE_ROOT; };
 		61BA522112823CF100BD1D72 /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Sparkle.framework; sourceTree = SOURCE_ROOT; };
-		61FB5E5D127FC469003229D7 /* GetNetworkSecurityType.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = GetNetworkSecurityType.sh; path = scripts/GetNetworkSecurityType.sh; sourceTree = "<group>"; };
 		61FB5F581280E970003229D7 /* ProxySetter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ProxySetter.h; sourceTree = "<group>"; };
 		61FB5F591280E970003229D7 /* ProxySetter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ProxySetter.m; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Sidestep-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Sidestep-Info.plist"; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Sidestep.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sidestep.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AABB000100000000SM000005 /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = System/Library/Frameworks/ServiceManagement.framework; sourceTree = SDKROOT; };
 		AABB000100000000UN000005 /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
+		AABB000100000000CW000001 /* CoreWLAN.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreWLAN.framework; path = System/Library/Frameworks/CoreWLAN.framework; sourceTree = SDKROOT; };
 		AAE84BF4129F7A8600320F49 /* GrowlMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GrowlMessage.h; sourceTree = "<group>"; };
 		AAE84BF5129F7A8600320F49 /* GrowlMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GrowlMessage.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -171,6 +163,7 @@
 				61BA522212823CF100BD1D72 /* Sparkle.framework in Frameworks */,
 				AABB000100000000SM000006 /* ServiceManagement.framework in Frameworks */,
 				AABB000100000000UN000006 /* UserNotifications.framework in Frameworks */,
+				AABB000100000000CW000002 /* CoreWLAN.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -219,6 +212,7 @@
 				6145B411127A7A6F00A5F7AF /* IOKit.framework */,
 				AABB000100000000SM000005 /* ServiceManagement.framework */,
 				AABB000100000000UN000005 /* UserNotifications.framework */,
+				AABB000100000000CW000001 /* CoreWLAN.framework */,
 			);
 			name = "Linked Frameworks";
 			sourceTree = "<group>";
@@ -273,12 +267,7 @@
 				6172BFC2162BA394002FD797 /* direct-insecure-icon@2x.png */,
 				61739FEE1294787E00BBD392 /* direct-secure-icon.png */,
 				6172BFC3162BA394002FD797 /* direct-secure-icon@2x.png */,
-				61FB5E5D127FC469003229D7 /* GetNetworkSecurityType.sh */,
 				61B3E825127BA7A50011E198 /* WatchSSHConnectionForChanges.sh */,
-				61B3E58C127ABBEB0011E198 /* TurnProxyOff.sh */,
-				61B3E58D127ABBEB0011E198 /* TurnProxyOn.sh */,
-				613F9D9712AD915A00B13A60 /* GetListOfVPNServices.sh */,
-				613F9CFE12AC924D00B13A60 /* TurnVPNOnOrOff.sh */,
 				8D1107310486CEB800E47090 /* Sidestep-Info.plist */,
 				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
 				1DDD58140DA1D0A300B32029 /* Sidestep.xib */,
@@ -372,17 +361,12 @@
 				61B3E4D0127A7D3B0011E198 /* SSHAskPass in Resources */,
 				8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */,
 				1DDD58160DA1D0A300B32029 /* Sidestep.xib in Resources */,
-				61B3E58F127ABBEB0011E198 /* TurnProxyOff.sh in Resources */,
-				61B3E590127ABBEB0011E198 /* TurnProxyOn.sh in Resources */,
 				61B3E827127BA7A50011E198 /* WatchSSHConnectionForChanges.sh in Resources */,
-				61FB5E5E127FC469003229D7 /* GetNetworkSecurityType.sh in Resources */,
 				61739FEF1294787E00BBD392 /* direct-secure-icon.png in Resources */,
 				6173A007129511F900BBD392 /* direct-insecure-icon.png in Resources */,
 				616141E6129722600090EE00 /* rerouted-secure-icon.png in Resources */,
 				616142971298A69F0090EE00 /* dsa_pub.pem in Resources */,
 				61A9285F129BB3D100B6B66B /* main-icon.icns in Resources */,
-				613F9CFF12AC924D00B13A60 /* TurnVPNOnOrOff.sh in Resources */,
-				613F9D9812AD915A00B13A60 /* GetListOfVPNServices.sh in Resources */,
 				6172BFC5162BA394002FD797 /* direct-insecure-icon@2x.png in Resources */,
 				6172BFC6162BA394002FD797 /* direct-secure-icon@2x.png in Resources */,
 				6172BFC7162BA394002FD797 /* rerouted-secure-icon@2x.png in Resources */,

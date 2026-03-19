@@ -9,11 +9,9 @@
 //  Copyright 2005 The Growl Project. All rights reserved.
 //
 
-@interface NetworkNotifier : NSObject
-{
-	id airportConnectionNotifyObject;
-	SEL airportConnectionNotifySelector;
-}
+#import <CoreWLAN/CoreWLAN.h>
+
+@interface NetworkNotifier : NSObject <CWEventDelegate>
 
 - (void)listenForAirportConnectionAndNotifyObject:(id)object withSelector:(SEL)selector;
 - (BOOL)getNetworkSecurityTypeAndNotifyObject:(id)object withSelector:(SEL)selector;

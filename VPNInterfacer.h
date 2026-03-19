@@ -8,9 +8,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface VPNInterfacer : NSObject {
-	
-}
+@interface VPNInterfacer : NSObject
 
 - (NSArray *)getListOfVPNServices;
 - (BOOL)turnVPNOnOrOff:(NSString *)serviceName withState:(BOOL)state;

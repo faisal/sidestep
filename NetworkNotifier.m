@@ -11,164 +11,103 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import <CoreWLAN/CoreWLAN.h>
 
-#include "NetworkNotifier.h"
-#include "AppController.h"
-#include "AppUtilities.h"
-#include <SystemConfiguration/SystemConfiguration.h>
+#import "NetworkNotifier.h"
+#import "AppController.h"
+#import "AppUtilities.h"
 
-/* @"Link Status" == 1 seems to mean disconnected */
-#define AIRPORT_DISCONNECTED 1
-
-/** A reference to the SystemConfiguration dynamic store. */
-static SCDynamicStoreRef dynStore;
-
-/** Our run loop source for notification. */
-static CFRunLoopSourceRef rlSrc;
-
-@implementation NetworkNotifier
-
-- (void)airportStatusChange:(NSDictionary *)newValue {
-//	NSLog(@"AirPort event");
-	
-    if (airportConnectionNotifyObject && airportConnectionNotifySelector) {					// If callback object and selector are defined,
-        [airportConnectionNotifyObject performSelector:airportConnectionNotifySelector];		// call the callback selector
-    }
+@implementation NetworkNotifier {
+	id airportConnectionNotifyObject;
+	SEL airportConnectionNotifySelector;
+	CWWiFiClient *wifiClient;
 }
 
-- (void)listenForAirportConnectionAndNotifyObject:(id)object withSelector:(SEL)selector {
-	
-	airportConnectionNotifyObject = object;
-	airportConnectionNotifySelector = selector;
-	
-}
-
-static void scCallback(SCDynamicStoreRef store, CFArrayRef changedKeys, void *info) {
-	NetworkNotifier *self = (__bridge NetworkNotifier *)info;
-
-	CFIndex count = CFArrayGetCount(changedKeys);
-	for (CFIndex i=0; i<count; ++i) {
-		CFStringRef key = CFArrayGetValueAtIndex(changedKeys, i);
-        
-		if (CFStringCompare(key,
-							CFSTR("State:/Network/Interface/en1/AirPort"),  // For Snow Leopard
-							0) == kCFCompareEqualTo ||
-            CFStringCompare(key,
-							CFSTR("State:/Network/Interface/en0/Link"),     // For Lion
-							0) == kCFCompareEqualTo) {
-			CFDictionaryRef newValue = SCDynamicStoreCopyValue(store, key);
-			[self airportStatusChange:(__bridge NSDictionary *)newValue];
-			if (newValue)
-				CFRelease(newValue);
-		}
-	}
-}
-
-- (id)init {
+- (instancetype)init {
 	if (!(self = [super init])) return nil;
 
 	airportConnectionNotifyObject = nil;
 	airportConnectionNotifySelector = nil;
-	
-	SCDynamicStoreContext context = {0, (__bridge void *)self, NULL, NULL, NULL};
 
-	dynStore = SCDynamicStoreCreate(kCFAllocatorDefault,
-									CFBundleGetIdentifier(CFBundleGetMainBundle()),
-									scCallback,
-									&context);
-	if (!dynStore) {
-		NSLog(@"SCDynamicStoreCreate() failed: %s", SCErrorString(SCError()));
-		return nil;
+	wifiClient = [CWWiFiClient sharedWiFiClient];
+	wifiClient.delegate = self;
+
+	NSError *error = nil;
+	if (![wifiClient startMonitoringEventWithType:CWEventTypeLinkDidChange error:&error]) {
+		NSLog(@"Failed to monitor CWEventTypeLinkDidChange: %@", error);
+	}
+	if (![wifiClient startMonitoringEventWithType:CWEventTypeSSIDDidChange error:&error]) {
+		NSLog(@"Failed to monitor CWEventTypeSSIDDidChange: %@", error);
 	}
 
-	const CFStringRef keys[3] = {
-		CFSTR("State:/Network/Interface/en0/Link"),
-		CFSTR("State:/Network/Global/IPv4"),
-		CFSTR("State:/Network/Interface/en1/AirPort")
-	};
-	CFArrayRef watchedKeys = CFArrayCreate(kCFAllocatorDefault,
-										   (const void **)keys,
-										   3,
-										   &kCFTypeArrayCallBacks);
-	if (!SCDynamicStoreSetNotificationKeys(dynStore,
-										   watchedKeys,
-										   NULL)) {
-		CFRelease(watchedKeys);
-		NSLog(@"SCDynamicStoreSetNotificationKeys() failed: %s", SCErrorString(SCError()));
-		CFRelease(dynStore);
-		dynStore = NULL;
-		
-		return nil;
-	}
-	CFRelease(watchedKeys);
-	
-	rlSrc = SCDynamicStoreCreateRunLoopSource(kCFAllocatorDefault, dynStore, 0);
-	CFRunLoopAddSource(CFRunLoopGetCurrent(), rlSrc, kCFRunLoopDefaultMode);
-	CFRelease(rlSrc);
-    
 	return self;
 }
 
-/*
- *	Get the currently connected network's security type and notify given object / selector.
- *
- *	return: true on success
- *	return: false if task path not found
- */
-- (BOOL)getNetworkSecurityTypeAndNotifyObject:(id)object withSelector:(SEL)selector {
-	
-	XLog(self, @"Getting network security type");
-	
-	NSTask *task = [[NSTask alloc] init];
-	
-	// Setup the pipes on the task
-	NSPipe *outputPipe = [NSPipe pipe];
-	NSPipe *errorPipe = [NSPipe pipe];
-	
-	[task setStandardOutput:outputPipe];
-	[task setStandardInput:[NSFileHandle fileHandleWithNullDevice]];
-	[task setStandardError:errorPipe];
-	
-	// Get the path of the script, which we've included as part of the main application bundle
-	NSString *taskPath = [NSBundle pathForResource:@"GetNetworkSecurityType"
-											ofType:@"sh"
-									   inDirectory:[[NSBundle mainBundle] bundlePath]];
-	
-	
-	XLog(self, @"Task path: %@",taskPath);
-	
-	if (taskPath == nil) {
-		return FALSE;
+- (void)listenForAirportConnectionAndNotifyObject:(id)object withSelector:(SEL)selector {
+	airportConnectionNotifyObject = object;
+	airportConnectionNotifySelector = selector;
+}
+
+#pragma mark - CWEventDelegate
+
+- (void)linkDidChangeForWiFiInterfaceWithName:(NSString *)interfaceName {
+	if (airportConnectionNotifyObject && airportConnectionNotifySelector) {
+		[airportConnectionNotifyObject performSelector:airportConnectionNotifySelector];
 	}
-	
-	// Set launch path for task
-	[task setLaunchPath:taskPath];
-	
-	// Before launching the task, get a filehandle for reading its output
-	 NSFileHandle *readHandle = [[task standardOutput] fileHandleForReading];
-	
-	// Launch task
-	[task launch];
-	
-	// Read output data
-	NSData *readData;
-	readData = [readHandle readDataToEndOfFile];
-	NSString *readString = [[NSString alloc] initWithData:readData encoding:NSASCIIStringEncoding];
+}
 
-	XLog(self, @"Task said: %@", readString);
+- (void)ssidDidChangeForWiFiInterfaceWithName:(NSString *)interfaceName {
+	if (airportConnectionNotifyObject && airportConnectionNotifySelector) {
+		[airportConnectionNotifyObject performSelector:airportConnectionNotifySelector];
+	}
+}
 
-	// Notify opening callback selector on object
-	[object performSelector:selector withObject:readString];
+#pragma mark - Security Type Detection
 
-	return TRUE;
-	
++ (NSString *)securityTypeStringForCWSecurity:(CWSecurity)security {
+	switch (security) {
+		case kCWSecurityNone:
+			return @"none";
+		case kCWSecurityWEP:
+			return @"wep";
+		case kCWSecurityWPAPersonal:
+		case kCWSecurityWPAEnterprise:
+			return @"wpa";
+		case kCWSecurityWPA2Personal:
+		case kCWSecurityWPA2Enterprise:
+			return @"wpa2";
+		case kCWSecurityWPA3Personal:
+		case kCWSecurityWPA3Enterprise:
+		case kCWSecurityWPA3Transition:
+			return @"wpa3";
+		default:
+			return @"unknown";
+	}
+}
+
+- (BOOL)getNetworkSecurityTypeAndNotifyObject:(id)object withSelector:(SEL)selector {
+
+	XLog(self, @"Getting network security type");
+
+	CWInterface *iface = wifiClient.interface;
+	if (!iface) {
+		XLog(self, @"No Wi-Fi interface found");
+		[object performSelector:selector withObject:@"unknown"];
+		return YES;
+	}
+
+	CWSecurity security = iface.security;
+	NSString *securityString = [NetworkNotifier securityTypeStringForCWSecurity:security];
+
+	XLog(self, @"Network security type: %@", securityString);
+
+	[object performSelector:selector withObject:securityString];
+
+	return YES;
 }
 
 - (void)dealloc {
-	if (rlSrc)
-		CFRunLoopRemoveSource(CFRunLoopGetCurrent(), rlSrc, kCFRunLoopDefaultMode);
-	if (dynStore)
-		CFRelease(dynStore);
+	[wifiClient stopMonitoringAllEventsAndReturnError:nil];
 }
 
 @end

@@ -178,6 +178,10 @@ Sidestep is a ~2010-era macOS menu bar app (~3,780 LOC, 14 .m files) that detect
 - Returns: 1=success, 0=failure, 2=no such service, 3=not VPN type
 - Important: `kSCNetworkInterfaceTypeVPN` does not exist in the public SystemConfiguration API — only use `kSCNetworkInterfaceTypePPP` and `kSCNetworkInterfaceTypeIPSec`
 
+### 5.3.1 TODO: Validate VPN control
+- VPN connect/disconnect (`turnVPNOnOrOff:withState:`) and service listing (`getListOfVPNServices`) have not been manually tested because no VPN services were available in the test environment.
+- Before release, configure at least one VPN service in System Preferences > Network and verify: (a) it appears in the Sidestep VPN dropdown, (b) Sidestep can connect and disconnect it.
+
 ### 5.4 Obsolete scripts removed
 - Deleted: `scripts/GetNetworkSecurityType.sh`, `scripts/GetListOfVPNServices.sh`, `scripts/TurnVPNOnOrOff.sh`, `scripts/TurnProxyOn.sh`, `scripts/TurnProxyOff.sh`
 - Kept: `scripts/WatchSSHConnectionForChanges.sh` (still used by SSHConnector for SSH log monitoring)
@@ -307,3 +311,9 @@ Phase 1 (Build System)
 ## Remaining Work
 
 1. **End-to-end testing** — Full test on both Intel and Apple Silicon hardware: launch → detect insecure Wi-Fi → tunnel connects → notification → sleep/wake → reconnect → switch to secure network → tunnel disconnects.
+
+2. **VPN validation** — No VPN services available in current test environment. Validate VPN detection (`getListOfVPNServices`) and control (`turnVPNOnOrOff`) with a real VPN configuration before shipping.
+
+3. **iCloud Private Relay interaction (Phase 7 polish)** — On macOS 12+ with Private Relay enabled, Safari routes HTTPS via Apple/Cloudflare relays and ignores system SOCKS proxy settings. macOS automatically pauses Private Relay when a SOCKS proxy is set, but existing Safari connections (already established via relay) do not re-route — only new connections use the tunnel. This is a macOS-level behaviour change, not a Sidestep bug. Mitigations to explore: (a) surface a menu item or notification banner saying "Tunnel connected — reopen Safari tabs to route through proxy", (b) investigate whether posting a `kSCPrefChangesCurrent`/`kSCPrefChangesCommitted` CFNotification more aggressively causes Safari to drop relay sessions sooner.
+
+4. **Slow proxy cutover (requires restarting Safari)** — Investigate why proxy changes don't take effect for existing browser sessions. Related to item 3 above: explore whether more aggressive `kSCPrefChangesCurrent`/`kSCPrefChangesCommitted` CFNotifications force Safari to drop existing connections and re-route through the proxy sooner, or whether a UX prompt ("Tunnel connected — reopen Safari tabs to route through proxy") is the right mitigation.
