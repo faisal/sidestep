@@ -13,8 +13,8 @@
 	NSUserDefaults *defaults;
 }
 
-- (void)saveSSHConnectionPID :(int)pid;
-- (int)getSSHConnectionPID;
+- (void)saveSSHConnectionPID:(NSInteger)pid;
+- (NSInteger)getSSHConnectionPID;
 
 - (NSString *)getServerUsername;
 

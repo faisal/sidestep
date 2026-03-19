@@ -35,17 +35,16 @@
  *******************************************************************************
  */
 
-- (void)saveSSHConnectionPID :(int)pid {
-	
-	XLog(self, @"Saving PID %d to user defaults", pid);
-	
+- (void)saveSSHConnectionPID:(NSInteger)pid {
+
+	XLog(self, @"Saving PID %ld to user defaults", (long)pid);
+
 	[defaults setInteger:pid forKey:@"sidestep_SSHConnectionPID"];
-	[defaults synchronize];
 
 }
 
-- (int)getSSHConnectionPID {
-	
+- (NSInteger)getSSHConnectionPID {
+
 	return [defaults integerForKey:@"sidestep_SSHConnectionPID"];
 
 }
@@ -65,7 +64,7 @@
 - (void)setRemotePortNumber :(NSString *)port {
 	
 	[defaults setObject:port forKey:@"sidestep_RemotePortNumber"];
-	[defaults synchronize];
+
 	
 }
 
@@ -78,7 +77,7 @@
 - (void)setLocalPortNumber :(NSString *)port {
 	
 	[defaults setObject:port forKey:@"sidestep_LocalPortNumber"];
-	[defaults synchronize];
+
 	
 }
 
@@ -91,7 +90,7 @@
 - (void)setAdditionalArguments :(NSString *)args {
 	
 	[defaults setObject:args forKey:@"sidestep_AdditionalSSHArguments"];
-	[defaults synchronize];
+
 	
 }
 
@@ -104,7 +103,7 @@
 - (void)setCompressSSHConnection:(BOOL)value {
 	
 	[defaults setBool:value forKey:@"sidestep_CompressSSHConnection"];
-	[defaults synchronize];
+
 	
 }
 
@@ -118,7 +117,7 @@
 - (void)setGrowlSetting :(BOOL)value {
 	
 	[defaults setBool:value forKey:@"sidestep_GrowlSetting"];
-	[defaults synchronize];
+
 	
 }
 
@@ -136,7 +135,7 @@
 - (void)setRanAtleastOnce :(BOOL)value {
 
 	[defaults setBool:value forKey:@"sidestep_ranAtLeastOnce"];
-	[defaults synchronize];
+
 	
 }
 
@@ -149,7 +148,7 @@
 - (void)setRerouteAutomatically :(BOOL)value {
 
 	[defaults setBool:value forKey:@"sidestep_rerouteAutomatically"];
-	[defaults synchronize];
+
 	
 }
 
@@ -162,7 +161,7 @@
 - (void)setRunOnLogin :(BOOL)value {
 
 	[defaults setBool:value forKey:@"sidestep_runOnLogin"];
-	[defaults synchronize];
+
 	
 }
 
@@ -175,7 +174,7 @@
 - (void)setSelectedProxy:(NSString *)selection {
 	
 	[defaults setObject:selection forKey:@"sidestep_selectedProxy"];
-	[defaults synchronize];
+
 	
 }
 
@@ -188,7 +187,7 @@
 - (void)setSelectedVPNService:(NSString *)selection {
 	
 	[defaults setObject:selection forKey:@"sidestep_selectedVPNService"];
-	[defaults synchronize];
+
 	
 }
 

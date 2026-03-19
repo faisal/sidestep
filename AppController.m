@@ -145,7 +145,7 @@ NSInteger GrowlSpam_TestConnection    = 0;
 
     [growl requestAuthorization];
 
-    int previousPID = [defaultsController getSSHConnectionPID];
+    NSInteger previousPID = [defaultsController getSSHConnectionPID];
 
     if (previousPID != 0) {
         XLog(self, @"Turning proxy off");

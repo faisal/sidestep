@@ -134,7 +134,7 @@ static BOOL _logsErrors;
 	OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)query, &result);
 
 	if (status != errSecSuccess || !result) {
-		if (_logsErrors)
+		if (_logsErrors && status != errSecItemNotFound)
 			NSLog(@"Error (%@) - OSStatus %d", NSStringFromSelector(_cmd), (int)status);
 		return nil;
 	}
@@ -162,7 +162,7 @@ static BOOL _logsErrors;
 	OSStatus status = SecItemAdd((__bridge CFDictionaryRef)query, NULL);
 
 	if (status != errSecSuccess) {
-		if (_logsErrors)
+		if (_logsErrors && status != errSecItemNotFound)
 			NSLog(@"Error (%@) - OSStatus %d", NSStringFromSelector(_cmd), (int)status);
 		return nil;
 	}
@@ -252,7 +252,7 @@ static BOOL _logsErrors;
 	}
 
 	if (status != errSecSuccess || !result) {
-		if (_logsErrors)
+		if (_logsErrors && status != errSecItemNotFound)
 			NSLog(@"Error (%@) - OSStatus %d", NSStringFromSelector(_cmd), (int)status);
 		return nil;
 	}
@@ -290,7 +290,7 @@ static BOOL _logsErrors;
 	OSStatus status = SecItemAdd((__bridge CFDictionaryRef)query, NULL);
 
 	if (status != errSecSuccess) {
-		if (_logsErrors)
+		if (_logsErrors && status != errSecItemNotFound)
 			NSLog(@"Error (%@) - OSStatus %d", NSStringFromSelector(_cmd), (int)status);
 		return nil;
 	}

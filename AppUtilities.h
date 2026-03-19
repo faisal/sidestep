@@ -16,6 +16,6 @@ extern void XFTimeLog(id object, CFAbsoluteTime *time, NSString *format, ...);
 
 // Loops thorugh an array checking if given object's value already
 // exists in the given array.  If it does, returns true.
-- (bool) object: (NSObject *) object existsInArray: (NSArray *) array;
+- (BOOL)object:(NSObject *)object existsInArray:(NSArray *)array;
 
 @end

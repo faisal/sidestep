@@ -42,6 +42,6 @@
 
 - (void)terminateSSHConnectionAttempt;
 
-- (void)killSSHConnectionForPID :(int)pid;
+- (void)killSSHConnectionForPID:(NSInteger)pid;
 
 @end

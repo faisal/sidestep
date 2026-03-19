@@ -312,11 +312,11 @@ NSString *terminateCommand = @"Sidestep: Terminate connection attempt manually\n
  *	return: void
  */
 
-- (void)killSSHConnectionForPID :(int)pid {
-	
-	XLog(self, @"Killing connection with PID: %d", pid);
-	
-	kill(pid, SIGTERM);
+- (void)killSSHConnectionForPID:(NSInteger)pid {
+
+	XLog(self, @"Killing connection with PID: %ld", (long)pid);
+
+	kill((pid_t)pid, SIGTERM);
 
 }
 
