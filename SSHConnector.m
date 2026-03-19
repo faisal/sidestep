@@ -11,6 +11,8 @@
 #include <signal.h>
 #include <unistd.h>
 
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+
 @implementation SSHConnector
 
 /*	
@@ -40,10 +42,10 @@ NSString *terminateCommand = @"Sidestep: Terminate connection attempt manually\n
 		withAdditionalArguments:(NSString *)additionalArgs
 			 withSSHCompression:(BOOL)sshCompression {
 
-	NSTask *taskObject = [[[NSTask alloc] init] autorelease];
-	
+	NSTask *taskObject = [[NSTask alloc] init];
+
 	// Set up arguments for the ssh command
-	NSMutableArray *args = [[NSMutableArray new] autorelease];
+	NSMutableArray *args = [NSMutableArray new];
 	[args addObject:[NSString stringWithFormat:@"%@@%@",username,hostname]];
 	[args addObject:[NSString stringWithFormat:@"-D %@", localPort]];
 	[args addObject:[NSString stringWithFormat:@"-p %@", remoteport]];
@@ -201,18 +203,18 @@ NSString *terminateCommand = @"Sidestep: Terminate connection attempt manually\n
 
 	XLog(self, @"Watching SSH connection for open or error");
 	
-	NSTask *task = [[[NSTask alloc] init] autorelease];
-	
+	NSTask *task = [[NSTask alloc] init];
+
 	// Setup the pipes on the task
 	NSPipe *outputPipe = [NSPipe pipe];
 	NSPipe *errorPipe = [NSPipe pipe];
-	
+
 	[task setStandardOutput:outputPipe];
 	[task setStandardInput:[NSFileHandle fileHandleWithNullDevice]];
 	[task setStandardError:errorPipe];
-	
+
 	// Set up arguments to the task
-	NSMutableArray *args = [[NSMutableArray new] autorelease];
+	NSMutableArray *args = [NSMutableArray new];
 	[args addObject:SSHLogPath];
 	
 	// Get the path of the task, which is included as part of the main application bundle

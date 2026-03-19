@@ -44,7 +44,7 @@ static CFRunLoopSourceRef rlSrc;
 }
 
 static void scCallback(SCDynamicStoreRef store, CFArrayRef changedKeys, void *info) {
-	NetworkNotifier *self = info;
+	NetworkNotifier *self = (__bridge NetworkNotifier *)info;
 
 	CFIndex count = CFArrayGetCount(changedKeys);
 	for (CFIndex i=0; i<count; ++i) {
@@ -57,7 +57,7 @@ static void scCallback(SCDynamicStoreRef store, CFArrayRef changedKeys, void *in
 							CFSTR("State:/Network/Interface/en0/Link"),     // For Lion
 							0) == kCFCompareEqualTo) {
 			CFDictionaryRef newValue = SCDynamicStoreCopyValue(store, key);
-			[self airportStatusChange:(NSDictionary *)newValue];
+			[self airportStatusChange:(__bridge NSDictionary *)newValue];
 			if (newValue)
 				CFRelease(newValue);
 		}
@@ -70,7 +70,7 @@ static void scCallback(SCDynamicStoreRef store, CFArrayRef changedKeys, void *in
 	airportConnectionNotifyObject = nil;
 	airportConnectionNotifySelector = nil;
 	
-	SCDynamicStoreContext context = {0, self, NULL, NULL, NULL};
+	SCDynamicStoreContext context = {0, (__bridge void *)self, NULL, NULL, NULL};
 
 	dynStore = SCDynamicStoreCreate(kCFAllocatorDefault,
 									CFBundleGetIdentifier(CFBundleGetMainBundle()),
@@ -78,10 +78,9 @@ static void scCallback(SCDynamicStoreRef store, CFArrayRef changedKeys, void *in
 									&context);
 	if (!dynStore) {
 		NSLog(@"SCDynamicStoreCreate() failed: %s", SCErrorString(SCError()));
-		[self release];
 		return nil;
 	}
-	
+
 	const CFStringRef keys[3] = {
 		CFSTR("State:/Network/Interface/en0/Link"),
 		CFSTR("State:/Network/Global/IPv4"),
@@ -99,7 +98,6 @@ static void scCallback(SCDynamicStoreRef store, CFArrayRef changedKeys, void *in
 		CFRelease(dynStore);
 		dynStore = NULL;
 		
-		[self release];
 		return nil;
 	}
 	CFRelease(watchedKeys);
@@ -156,14 +154,12 @@ static void scCallback(SCDynamicStoreRef store, CFArrayRef changedKeys, void *in
 	NSData *readData;
 	readData = [readHandle readDataToEndOfFile];
 	NSString *readString = [[NSString alloc] initWithData:readData encoding:NSASCIIStringEncoding];
-	
+
 	XLog(self, @"Task said: %@", readString);
-		
+
 	// Notify opening callback selector on object
 	[object performSelector:selector withObject:readString];
-	
-	[task release];
-	
+
 	return TRUE;
 	
 }
@@ -173,8 +169,6 @@ static void scCallback(SCDynamicStoreRef store, CFArrayRef changedKeys, void *in
 		CFRunLoopRemoveSource(CFRunLoopGetCurrent(), rlSrc, kCFRunLoopDefaultMode);
 	if (dynStore)
 		CFRelease(dynStore);
-	
-	[super dealloc];
 }
 
 @end

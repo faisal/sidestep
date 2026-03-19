@@ -72,7 +72,9 @@ NSInteger GrowlSpam_TestConnection					= 0;
 		vpnInterfacer = [[VPNInterfacer alloc] init];
 		
 		growl = [[GrowlMessage alloc] init];
-		
+
+		updaterController = [[SPUStandardUpdaterController alloc] initWithStartingUpdater:NO updaterDelegate:nil userDriverDelegate:nil];
+
 		initiatedDelayedConnectionAttempt = FALSE;
 		currentDelay = 0;
 		retryCounter = 0;
@@ -82,33 +84,12 @@ NSInteger GrowlSpam_TestConnection					= 0;
 		SSHConnected = FALSE;
 		
 		currentNetworkSecurityType = nil;
-        
-        SInt32 version = 0;
-        Gestalt( gestaltSystemVersion, &version );
-        lion = ( version >= 0x1070 );
     }
 	
     return self;	
 	
 }
 
-- (void)dealloc {
-	
-	[SSHconnector release];
-	[defaultsController release];
-	[networkNotifier release];
-	[proxySetter release];
-	[vpnInterfacer release];
-	
-	[statusImageDirectInsecure release];
-	[statusImageDirectSecure release];
-	[statusImageReroutedSecure release];
-	
-	[growl release];
-	
-	[super dealloc];
-	
-}
 
 /*
  *	UI Event Handlers
@@ -172,35 +153,31 @@ NSInteger GrowlSpam_TestConnection					= 0;
 	// Update UI for the selected proxy
 	[self updateUIForSelectedProxy];
 	
-	// Growl
-	[GrowlApplicationBridge setGrowlDelegate:self];
+	// Notifications (GrowlMessage stub, replaced by UserNotifications in Phase 4)
 	
 	// Create status menu item
-	statusItem = [[[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength] retain];
+	statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
+	statusItem.button.image = statusImageDirectSecure;
 	[statusItem setMenu:statusMenu];
-	[statusItem setHighlightMode:YES];
 	
 	// Allocates and loads the images into the application which will be used for our NSStatusItem
 	statusImageDirectInsecure = [NSImage imageNamed:@"direct-insecure-icon"];
 	statusImageDirectSecure = [NSImage imageNamed:@"direct-secure-icon"];
 	statusImageReroutedSecure = [NSImage imageNamed:@"rerouted-secure-icon"];
     
-    // Enable template for Yosemite dark menu bar support
-    if (! (floor(NSAppKitVersionNumber) <= NSAppKitVersionNumber10_9))
-    {
-        [statusImageDirectInsecure setTemplate:YES];
-        [statusImageDirectSecure setTemplate:YES];
-        [statusImageReroutedSecure setTemplate:YES];
-    }
+	// Enable template for dark menu bar support
+	statusImageDirectInsecure.template = YES;
+	statusImageDirectSecure.template = YES;
+	statusImageReroutedSecure.template = YES;
 	
-	// Sets the default images in our NSStatusItem
-	[statusItem setImage:statusImageDirectSecure];
-	[statusItem setAlternateImage:statusImageDirectSecure];
 	
+	// Start the updater
+	[updaterController startUpdater];
+
 	// Check for updates if not first run and check for updates is enabled
-	if ([defaultsController ranAtleastOnce] && [[SUUpdater sharedUpdater] automaticallyChecksForUpdates]) {
+	if ([defaultsController ranAtleastOnce] && updaterController.updater.automaticallyChecksForUpdates) {
 		XLog(self, @"Checking for updates");
-		[[SUUpdater sharedUpdater] checkForUpdatesInBackground];
+		[updaterController.updater checkForUpdatesInBackground];
 	}
 	
 	// Set first-run default preferences
@@ -258,16 +235,17 @@ NSInteger GrowlSpam_TestConnection					= 0;
 		[NSApp activateIgnoringOtherApps:YES];	// Allows windows of this app to become front
 		
 		// Ask if user really wants to quit
-        int decision = NSRunCriticalAlertPanel (@"Do you want to disconnect before you quit?",
-												@"If you quit without disconnecting, your internet "
-												"will continue to be routed through the proxy.",
-												@"Yes",
-												@"No",
-												nil,
-												nil);
-		
+		NSAlert *alert = [[NSAlert alloc] init];
+		[alert setAlertStyle:NSAlertStyleCritical];
+		[alert setMessageText:@"Do you want to disconnect before you quit?"];
+		[alert setInformativeText:@"If you quit without disconnecting, your internet "
+		 "will continue to be routed through the proxy."];
+		[alert addButtonWithTitle:@"Yes"];
+		[alert addButtonWithTitle:@"No"];
+		NSModalResponse decision = [alert runModal];
+
 		// Operate based on user's decision
-		if (decision == NSAlertDefaultReturn) {	// Answer was "Yes"
+		if (decision == NSAlertFirstButtonReturn) {	// Answer was "Yes"
 			XLog(self, @"Turning proxy off");
             [self turnWirelessProxyOffThread];
 						
@@ -436,17 +414,6 @@ NSInteger GrowlSpam_TestConnection					= 0;
 }
  */
 
-- (NSDictionary *) registrationDictionaryForGrowl {
-	NSArray *notifications;
-	notifications = [NSArray arrayWithObject:@"GrowlNotification"];
-	
-	NSDictionary *dict;
-	dict = [NSDictionary dictionaryWithObjectsAndKeys:
-			notifications, GROWL_NOTIFICATIONS_ALL,
-			notifications, GROWL_NOTIFICATIONS_DEFAULT, nil];
-	
-	return (dict);
-}
 
 /*
  *	Threads
@@ -454,8 +421,8 @@ NSInteger GrowlSpam_TestConnection					= 0;
  */
 
 - (void)openSSHConnectionAfterDelayThread {
-	
-	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+
+	@autoreleasepool {
 
 	while (currentDelay > 0) {
 		XLog(self, @"Opening SSH connection in %d seconds", currentDelay);
@@ -494,71 +461,47 @@ NSInteger GrowlSpam_TestConnection					= 0;
 	}
 	
 	initiatedDelayedConnectionAttempt = FALSE;
-	
-	[pool release];
+
+	} // @autoreleasepool
 }
 
 - (void)watchSSHConnectionForCloseThread :(NSTask *)connection {
-	
-	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init]; 
-	
-    
-    [SSHconnector watchSSHConnectionAndOnCloseNotifyObject:self
+
+	@autoreleasepool {
+		[SSHconnector watchSSHConnectionAndOnCloseNotifyObject:self
 											  withSelector:@selector(SSHConnectionClosed)
 											withConnection:connection];
-	
-	[pool release];
-    
+	}
 }
 
 - (void)terminateSSHConnectionAttemptThread {
-	
-	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	
-	[SSHconnector terminateSSHConnectionAttempt];
-	
-	[pool release];
 
+	@autoreleasepool {
+		[SSHconnector terminateSSHConnectionAttempt];
+	}
 }
 
 - (void)turnWirelessProxyOnThread :(NSNumber *)port {
-	
+
 	@autoreleasepool {
-    
-        if(lion) {
-            if (![proxySetter toggleProxy:TRUE interface:@"Wi-Fi" port:port]) {
-                [self showAuthorizationErrorSidestepDialog];
-            }
-        } else {
-            if (![proxySetter toggleProxy:TRUE interface:@"Airport" port:port]) {
-                [self showAuthorizationErrorSidestepDialog];
-            }
-        }
-	
-    }
+		if (![proxySetter toggleProxy:TRUE interface:@"Wi-Fi" port:port]) {
+			[self showAuthorizationErrorSidestepDialog];
+		}
+	}
 }
 
 - (void)turnWirelessProxyOffThread {
-	
-	@autoreleasepool {
 
-        if(lion) {
-            if (![proxySetter toggleProxy:FALSE interface:@"Wi-Fi" port:0]) {
-                [self showAuthorizationErrorSidestepDialog];
-            }
-        } else {
-            if (![proxySetter toggleProxy:FALSE interface:@"Airport" port:0]) {
-                [self showAuthorizationErrorSidestepDialog];
-            }
-        }
-        
+	@autoreleasepool {
+		if (![proxySetter toggleProxy:FALSE interface:@"Wi-Fi" port:0]) {
+			[self showAuthorizationErrorSidestepDialog];
+		}
 	}
 }
 
 - (void)openVPNConnectionAfterDelayThread {
 
-	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	
+	@autoreleasepool {
 	while (currentDelay > 0) {
 		XLog(self, @"Opening VPN connection in %d seconds", currentDelay);
 		
@@ -584,15 +527,13 @@ NSInteger GrowlSpam_TestConnection					= 0;
 	}
 	
 	initiatedDelayedConnectionAttempt = FALSE;
-	
-	[pool release];
-	
+
+	} // @autoreleasepool
 }
 
 - (void)closeVPNConnectionThread {
 	
-	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-
+	@autoreleasepool {
 	int result = [vpnInterfacer turnVPNOnOrOff:[defaultsController selectedVPNService] withState:FALSE];
 	if (!result) {
 		[self showRestartSidestepDialog];
@@ -605,9 +546,8 @@ NSInteger GrowlSpam_TestConnection					= 0;
 			[growl message:unknownVPNText];
 		}
 	}
-	
-	[pool release];
-	
+
+	} // @autoreleasepool
 }
 
 /*
@@ -811,8 +751,7 @@ NSInteger GrowlSpam_TestConnection					= 0;
 			GrowlSpam_TestConnection = 0;
 		}
 		// Update the images in our NSStatusItem
-		[statusItem setImage:statusImageDirectSecure];
-		[statusItem setAlternateImage:statusImageDirectSecure];
+		statusItem.button.image = statusImageDirectSecure;
 	}
 	else if ([currentNetworkSecurityType isEqualToString:@"none"]) {
 		[connectionStatus setTitle:openConnectionStatusText];
@@ -821,8 +760,7 @@ NSInteger GrowlSpam_TestConnection					= 0;
 			GrowlSpam_ConnectionType = 2;
 		}
 		// Update the images in our NSStatusItem
-		[statusItem setImage:statusImageDirectInsecure];
-		[statusItem setAlternateImage:statusImageDirectInsecure];
+		statusItem.button.image = statusImageDirectInsecure;
 	}
 	else {
 		[connectionStatus setTitle:protectedConnectionStatusText];
@@ -831,8 +769,7 @@ NSInteger GrowlSpam_TestConnection					= 0;
 			GrowlSpam_ConnectionType = 3;
 		}
 		// Update the images in our NSStatusItem
-		[statusItem setImage:statusImageDirectSecure];
-		[statusItem setAlternateImage:statusImageDirectSecure];
+		statusItem.button.image = statusImageDirectSecure;
 	}
 	
 }
@@ -884,8 +821,7 @@ NSInteger GrowlSpam_TestConnection					= 0;
 	[rerouteOrRestoreConnectionButton setEnabled:TRUE];
 	
 	// Update the images in our NSStatusItem
-	[statusItem setImage:statusImageReroutedSecure];
-	[statusItem setAlternateImage:statusImageReroutedSecure];
+	statusItem.button.image = statusImageReroutedSecure;
 	
 }
 
@@ -981,15 +917,15 @@ NSInteger GrowlSpam_TestConnection					= 0;
 	
 	[NSApp activateIgnoringOtherApps:YES];	// Allows windows of this app to become front
 	
-	NSRunCriticalAlertPanel(	@"Error accessing your System Preferences",
-                            @"It seems that you didn't allow Sidestep to modify your System Preferences.\n\n"
-                            "Please close and open Sidestep again in order to ensure smooth running,"
-                            "by authorizing Sidestep to modify your System.\n\n"
-                            "Until you do so, you will not benefit from Sidestep functionalities.",
-                            @"OK",
-                            nil,
-                            nil,
-                            nil);
+	NSAlert *alert = [[NSAlert alloc] init];
+	[alert setAlertStyle:NSAlertStyleCritical];
+	[alert setMessageText:@"Error accessing your System Preferences"];
+	[alert setInformativeText:@"It seems that you didn't allow Sidestep to modify your System Preferences.\n\n"
+	 "Please close and open Sidestep again in order to ensure smooth running, "
+	 "by authorizing Sidestep to modify your System.\n\n"
+	 "Until you do so, you will not benefit from Sidestep functionalities."];
+	[alert addButtonWithTitle:@"OK"];
+	[alert runModal];
 }
 
 - (void)showRestartSidestepDialog {
@@ -998,16 +934,16 @@ NSInteger GrowlSpam_TestConnection					= 0;
 	
 	[NSApp activateIgnoringOtherApps:YES];	// Allows windows of this app to become front
 	
-	NSRunCriticalAlertPanel(	@"Please restart Sidestep",
-								@"It seems that you've moved Sidestep to somewhere else on your computer "
-								 "or have renamed the application.\n\n"
-								 "Please close and open Sidestep again in order to ensure smooth running.\n\n"
-								 "Until you do so, you might experience problems with Sidestep and your "
-								 "Internet connection.",
-								@"OK",
-								nil,
-								nil,
-								nil);
+	NSAlert *alert = [[NSAlert alloc] init];
+	[alert setAlertStyle:NSAlertStyleCritical];
+	[alert setMessageText:@"Please restart Sidestep"];
+	[alert setInformativeText:@"It seems that you've moved Sidestep to somewhere else on your computer "
+	 "or have renamed the application.\n\n"
+	 "Please close and open Sidestep again in order to ensure smooth running.\n\n"
+	 "Until you do so, you might experience problems with Sidestep and your "
+	 "Internet connection."];
+	[alert addButtonWithTitle:@"OK"];
+	[alert runModal];
 	
 }
 

@@ -7,10 +7,8 @@
 //
 
 #import <Cocoa/Cocoa.h>
-#import <Growl/Growl.h>
 
-
-@interface GrowlMessage : NSObject { 
+@interface GrowlMessage : NSObject {
 	NSUserDefaults *setting;
 }
 

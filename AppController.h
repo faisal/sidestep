@@ -7,7 +7,8 @@
 //
 
 #import <Cocoa/Cocoa.h>
-#import <Sparkle/SUUpdater.h>
+#import <Sparkle/SPUStandardUpdaterController.h>
+#import <Sparkle/SPUUpdater.h>
 #import "SSHConnector.h"
 #import "DefaultsController.h"
 #import "LoginItemController.h"
@@ -18,7 +19,7 @@
 #import "AppUtilities.h"
 #import "GrowlMessage.h"
 
-@interface AppController : NSObject <GrowlApplicationBridgeDelegate, NSTextFieldDelegate> { //<NSApplicationDelegate> {
+@interface AppController : NSObject <NSTextFieldDelegate> {
     NSWindow *window;
 	
 	IBOutlet NSMenu *statusMenu;
@@ -49,7 +50,9 @@
 	VPNInterfacer *vpnInterfacer;
 	
 	GrowlMessage *growl;
-	
+
+	SPUStandardUpdaterController *updaterController;
+
 	Boolean initiatedDelayedConnectionAttempt;
 	int currentDelay;
 	int retryCounter;
@@ -69,8 +72,6 @@
 	Boolean SSHConnected;
 	
 	NSString *currentNetworkSecurityType;
-    
-    BOOL lion; //OSX version (important to choose "Airport" vs "Wi-Fi")
 }
 
 - (void)openSSHConnectionAfterDelay :(int)delay;
@@ -101,7 +102,5 @@
 
 - (IBAction)compressionToggled:(id)sender;
 - (NSString *)sshCommand;
-
-- (NSDictionary *) registrationDictionaryForGrowl;
 
 @end

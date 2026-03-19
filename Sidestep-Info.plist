@@ -9,7 +9,7 @@
 	<key>CFBundleIconFile</key>
 	<string>main-icon.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.chetansurpur.${PRODUCT_NAME:rfc1034identifier}</string>
+	<string>com.faisal.${PRODUCT_NAME:rfc1034identifier}</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -31,12 +31,12 @@
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>SUEnableAutomaticChecks</key>
-	<string>true</string>
+	<true/>
 	<key>SUFeedURL</key>
-	<string>http://chetansurpur.com/projects/sidestep/appcast.xml</string>
-	<key>SUPublicDSAKeyFile</key>
-	<string>dsa_pub.pem</string>
+	<string>https://www.faisal.com/projects/sidestep/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string></string>
 	<key>SUShowReleaseNotes</key>
-	<string>true</string>
+	<true/>
 </dict>
 </plist>

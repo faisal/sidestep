@@ -29,12 +29,6 @@
 	
 }
 
-- (void)dealloc {
-	
-	[defaults release];
-	[super dealloc];
-	
-}
 
 /*
  *	Data Storage

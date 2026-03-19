@@ -23,16 +23,16 @@
 
 	XLog(self, @"Getting list of VPN services");
 	
-	NSTask *task = [[[NSTask alloc] init] autorelease];
-	
+	NSTask *task = [[NSTask alloc] init];
+
 	// Setup the pipes on the task
 	NSPipe *outputPipe = [NSPipe pipe];
 	NSPipe *errorPipe = [NSPipe pipe];
-	
+
 	[task setStandardOutput:outputPipe];
 	[task setStandardInput:[NSFileHandle fileHandleWithNullDevice]];
 	[task setStandardError:errorPipe];
-	
+
 	// Get the path of the task, which is included as part of the main application bundle
 	NSString *taskPath = [NSBundle pathForResource:@"GetListOfVPNServices"
 											ofType:@"sh"
@@ -90,16 +90,16 @@
 	
 	XLog(self, @"Turning VPN on with service name: %@", serviceName);
 	
-	NSTask *task = [[[NSTask alloc] init] autorelease];
-	
+	NSTask *task = [[NSTask alloc] init];
+
 	// Setup the pipes on the task
 	NSPipe *outputPipe = [NSPipe pipe];
 	NSPipe *errorPipe = [NSPipe pipe];
-	
+
 	[task setStandardOutput:outputPipe];
 	[task setStandardInput:[NSFileHandle fileHandleWithNullDevice]];
 	[task setStandardError:errorPipe];
-	
+
 	// Set up arguments to the task
 	NSArray *args = [NSArray arrayWithObjects:	[NSString stringWithString:serviceName],
 					 [NSString stringWithFormat:@"%d", state],

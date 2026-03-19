@@ -1,5 +1,5 @@
 /*Copyright (c) 2009 Extendmac, LLC. <support@extendmac.com>
- 
+
  Permission is hereby granted, free of charge, to any person
  obtaining a copy of this software and associated documentation
  files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
  copies of the Software, and to permit persons to whom the
  Software is furnished to do so, subject to the following
  conditions:
- 
+
  The above copyright notice and this permission notice shall be
  included in all copies or substantial portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -24,36 +24,13 @@
 
 #import "EMKeychainItem.h"
 
-@interface EMKeychainItem (Private)
-
-/*!
-	@abstract Modifies the given attribute to be newValue.
-	@param attributeTag The attribute's tag.
-	@param newValue A pointer to the new value.
-	@param newLength The length of the new value.
-*/	
-- (void)_modifyAttributeWithTag:(SecItemAttr)attributeTag toBeValue:(void *)newValue ofLength:(UInt32)newLength;
-
-@end
-
 @implementation EMKeychainItem
 
 static BOOL _logsErrors;
 
-+ (void)lockKeychain
-{
-	SecKeychainLock(NULL);
-}
-
-+ (void)unlockKeychain
-{
-	SecKeychainUnlock(NULL, 0, NULL, NO);
-}
-
 + (BOOL)logsErrors
 {
-	@synchronized (self)
-	{
+	@synchronized (self) {
 		return _logsErrors;
 	}
 	return NO;
@@ -61,124 +38,57 @@ static BOOL _logsErrors;
 
 + (void)setLogsErrors:(BOOL)logsErrors
 {
-	@synchronized (self)
-	{
-		if (_logsErrors == logsErrors)
-			return;
-		
+	@synchronized (self) {
 		_logsErrors = logsErrors;
 	}
 }
 
-#pragma mark -
-
-- (id)_initWithCoreKeychainItem:(SecKeychainItemRef)item
-					   username:(NSString *)username
-					   password:(NSString *)password
+- (instancetype)_initWithUsername:(NSString *)username password:(NSString *)password
 {
-	if ((self = [super init]))
-	{
-		mCoreKeychainItem = item;
+	if ((self = [super init])) {
 		mUsername = [username copy];
 		mPassword = [password copy];
-		
-		return self;
 	}
-	return nil;
-}
-
-- (void)_modifyAttributeWithTag:(SecItemAttr)attributeTag toBeValue:(void *)newValue ofLength:(UInt32)newLength
-{
-	NSAssert(mCoreKeychainItem, @"Core keychain item is nil. You cannot modify a keychain item that is not in the keychain.");
-	
-	SecKeychainAttribute attributes[1];
-	attributes[0].tag = attributeTag;
-	attributes[0].length = newLength;
-	attributes[0].data = newValue;
-	
-	SecKeychainAttributeList attributeList;
-	attributeList.count = 1;
-	attributeList.attr = attributes;
-	
-	SecKeychainItemModifyAttributesAndData(mCoreKeychainItem, &attributeList, 0, NULL);
-}
-
-- (void)dealloc
-{
-	[mUsername release];
-	[mPassword release];
-	[mLabel release];
-	
-	if (mCoreKeychainItem)
-		CFRelease(mCoreKeychainItem);
-	
-	[super dealloc];
+	return self;
 }
 
 #pragma mark General Properties
 
-@dynamic password;
-- (void)setPassword:(NSString *)newPassword
+@dynamic username;
+- (NSString *)username { return mUsername; }
+- (void)setUsername:(NSString *)newUsername
 {
-	@synchronized (self)
-	{
-		if (mPassword == newPassword)
-			return;
-		
-		[mPassword release];
-		mPassword = [newPassword copy];
-		
-		const char *newPasswordCString = [newPassword UTF8String];
-		SecKeychainItemModifyAttributesAndData(mCoreKeychainItem, NULL, strlen(newPasswordCString), (void *)newPasswordCString);
+	@synchronized (self) {
+		if (mUsername == newUsername) return;
+		mUsername = [newUsername copy];
 	}
 }
 
-@dynamic username;
-- (void)setUsername:(NSString *)newUsername
+@dynamic password;
+- (NSString *)password { return mPassword; }
+- (void)setPassword:(NSString *)newPassword
 {
-	@synchronized (self)
-	{
-		if (mUsername == newUsername)
-			return;
-		
-		[mUsername release];
-		mUsername = [newUsername copy];
-		
-		const char *newUsernameCString = [newUsername UTF8String];
-		[self _modifyAttributeWithTag:kSecAccountItemAttr toBeValue:(void *)newUsernameCString ofLength:strlen(newUsernameCString)];
+	@synchronized (self) {
+		if (mPassword == newPassword) return;
+		mPassword = [newPassword copy];
 	}
 }
 
 @dynamic label;
+- (NSString *)label { return mLabel; }
 - (void)setLabel:(NSString *)newLabel
 {
-	@synchronized (self)
-	{
-		if (mLabel == newLabel)
-			return;
-		
-		[mLabel release];
+	@synchronized (self) {
+		if (mLabel == newLabel) return;
 		mLabel = [newLabel copy];
-		
-		const char *newLabelCString = [newLabel UTF8String];
-		[self _modifyAttributeWithTag:kSecLabelItemAttr toBeValue:(void *)newLabelCString ofLength:strlen(newLabelCString)];
 	}
 }
 
 #pragma mark Actions
+
 - (void)removeFromKeychain
 {
-	NSAssert(mCoreKeychainItem, @"Core keychain item is nil. You cannot remove a keychain item that is not in the keychain already.");
-	
-	if (mCoreKeychainItem)
-	{
-		OSStatus resultStatus = SecKeychainItemDelete(mCoreKeychainItem);
-		if (resultStatus == noErr)
-		{
-			CFRelease(mCoreKeychainItem);
-			mCoreKeychainItem = nil;
-		}
-	}
+	// Subclasses override
 }
 
 @end
@@ -186,63 +96,53 @@ static BOOL _logsErrors;
 #pragma mark -
 @implementation EMGenericKeychainItem
 
-- (id)_initWithCoreKeychainItem:(SecKeychainItemRef)item
-					serviceName:(NSString *)serviceName
-					   username:(NSString *)username
-					   password:(NSString *)password
+- (instancetype)_initWithServiceName:(NSString *)serviceName
+							username:(NSString *)username
+							password:(NSString *)password
 {
-	if ((self = [super _initWithCoreKeychainItem:item username:username password:password]))
-	{
+	if ((self = [super _initWithUsername:username password:password])) {
 		mServiceName = [serviceName copy];
-		return self;
 	}
-	return nil;
+	return self;
 }
 
-+ (id)_genericKeychainItemWithCoreKeychainItem:(SecKeychainItemRef)coreKeychainItem 
-								forServiceName:(NSString *)serviceName
-									  username:(NSString *)username
-									  password:(NSString *)password
+@dynamic serviceName;
+- (NSString *)serviceName { return mServiceName; }
+- (void)setServiceName:(NSString *)newServiceName
 {
-	return [[[EMGenericKeychainItem alloc] _initWithCoreKeychainItem:coreKeychainItem
-														 serviceName:serviceName
-															username:username
-															password:password] autorelease];
+	@synchronized (self) {
+		if (mServiceName == newServiceName) return;
+		mServiceName = [newServiceName copy];
+	}
 }
 
-- (void)dealloc
-{
-	[mServiceName release];
-
-	[super dealloc];
-}
-
-#pragma mark -
-
-+ (EMGenericKeychainItem *)genericKeychainItemForService:(NSString *)serviceName 
++ (EMGenericKeychainItem *)genericKeychainItemForService:(NSString *)serviceName
 											withUsername:(NSString *)username
 {
 	if (!serviceName || !username)
 		return nil;
-	
-	const char *serviceNameCString = [serviceName UTF8String];
-	const char *usernameCString = [username UTF8String];
-	
-	UInt32 passwordLength = 0;
-	char *password = nil;
-	
-	SecKeychainItemRef item = nil;
-	OSStatus returnStatus = SecKeychainFindGenericPassword(NULL, strlen(serviceNameCString), serviceNameCString, strlen(usernameCString), usernameCString, &passwordLength, (void **)&password, &item);
-	if (returnStatus != noErr || !item)
-	{
+
+	NSDictionary *query = @{
+		(__bridge id)kSecClass: (__bridge id)kSecClassGenericPassword,
+		(__bridge id)kSecAttrService: serviceName,
+		(__bridge id)kSecAttrAccount: username,
+		(__bridge id)kSecReturnData: @YES,
+		(__bridge id)kSecMatchLimit: (__bridge id)kSecMatchLimitOne,
+	};
+
+	CFTypeRef result = NULL;
+	OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)query, &result);
+
+	if (status != errSecSuccess || !result) {
 		if (_logsErrors)
-			NSLog(@"Error (%@) - %s", NSStringFromSelector(_cmd), GetMacOSStatusErrorString(returnStatus));
+			NSLog(@"Error (%@) - OSStatus %d", NSStringFromSelector(_cmd), (int)status);
 		return nil;
 	}
-	NSString *passwordString = [[[NSString alloc] initWithData:[NSData dataWithBytes:password length:passwordLength] encoding:NSUTF8StringEncoding] autorelease];
-	SecKeychainItemFreeContent(NULL, password);
-	
-	return [EMGenericKeychainItem _genericKeychainItemWithCoreKeychainItem:item forServiceName:serviceName username:username password:passwordString];
+
+	NSData *passwordData = (__bridge_transfer NSData *)result;
+	NSString *password = [[NSString alloc] initWithData:passwordData encoding:NSUTF8StringEncoding];
+
+	return [[EMGenericKeychainItem alloc] _initWithServiceName:serviceName username:username password:password];
 }
 
 + (EMGenericKeychainItem *)addGenericKeychainItemForService:(NSString *)serviceName
@@ -251,39 +151,36 @@ static BOOL _logsErrors;
 {
 	if (!serviceName || !username || !password)
 		return nil;
-	
-	const char *serviceNameCString = [serviceName UTF8String];
-	const char *usernameCString = [username UTF8String];
-	const char *passwordCString = [password UTF8String];
-	
-	SecKeychainItemRef item = nil;
-	OSStatus returnStatus = SecKeychainAddGenericPassword(NULL, strlen(serviceNameCString), serviceNameCString, strlen(usernameCString), usernameCString, strlen(passwordCString), (void *)passwordCString, &item);
-	
-	if (returnStatus != noErr || !item)
-	{
+
+	NSDictionary *query = @{
+		(__bridge id)kSecClass: (__bridge id)kSecClassGenericPassword,
+		(__bridge id)kSecAttrService: serviceName,
+		(__bridge id)kSecAttrAccount: username,
+		(__bridge id)kSecValueData: [password dataUsingEncoding:NSUTF8StringEncoding],
+	};
+
+	OSStatus status = SecItemAdd((__bridge CFDictionaryRef)query, NULL);
+
+	if (status != errSecSuccess) {
 		if (_logsErrors)
-			NSLog(@"Error (%@) - %s", NSStringFromSelector(_cmd), GetMacOSStatusErrorString(returnStatus));
+			NSLog(@"Error (%@) - OSStatus %d", NSStringFromSelector(_cmd), (int)status);
 		return nil;
 	}
-	return [EMGenericKeychainItem _genericKeychainItemWithCoreKeychainItem:item forServiceName:serviceName username:username password:password];
+
+	return [[EMGenericKeychainItem alloc] _initWithServiceName:serviceName username:username password:password];
 }
 
-#pragma mark Generic Properties
-
-@dynamic serviceName;
-- (void)setServiceName:(NSString *)newServiceName
+- (void)removeFromKeychain
 {
-	@synchronized (self)
-	{
-		if (mServiceName == newServiceName)
-			return;
-		
-		[mServiceName release];
-		mServiceName = [newServiceName copy];
-		
-		const char *newServiceNameCString = [newServiceName UTF8String];
-		[self _modifyAttributeWithTag:kSecServiceItemAttr toBeValue:(void *)newServiceNameCString ofLength:strlen(newServiceNameCString)];
-	}
+	if (!mServiceName) return;
+
+	NSDictionary *query = @{
+		(__bridge id)kSecClass: (__bridge id)kSecClassGenericPassword,
+		(__bridge id)kSecAttrService: mServiceName,
+		(__bridge id)kSecAttrAccount: self.username,
+	};
+
+	SecItemDelete((__bridge CFDictionaryRef)query);
 }
 
 @end
@@ -291,52 +188,43 @@ static BOOL _logsErrors;
 #pragma mark -
 @implementation EMInternetKeychainItem
 
-- (id)_initWithCoreKeychainItem:(SecKeychainItemRef)item
-						 server:(NSString *)server
-					   username:(NSString *)username
-					   password:(NSString *)password
-						   path:(NSString *)path
-						   port:(NSInteger)port
-					   protocol:(SecProtocolType)protocol
+- (instancetype)_initWithServer:(NSString *)server
+						username:(NSString *)username
+						password:(NSString *)password
+							path:(NSString *)path
+							port:(NSInteger)port
+						protocol:(SecProtocolType)protocol
 {
-	if ((self = [super _initWithCoreKeychainItem:item username:username password:password]))
-	{
+	if ((self = [super _initWithUsername:username password:password])) {
 		mServer = [server copy];
 		mPath = [path copy];
 		mPort = port;
 		mProtocol = protocol;
-		
-		return self;
 	}
-	return nil;
+	return self;
 }
 
-- (void)dealloc
+- (NSMutableDictionary *)_queryForServer:(NSString *)server
+								username:(NSString *)username
+									path:(NSString *)path
+									port:(NSInteger)port
+								protocol:(SecProtocolType)protocol
 {
-	[mServer release];
-	[mPath release];
-	
-	[super dealloc];
-}
+	NSMutableDictionary *query = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+		(__bridge id)kSecClassInternetPassword, (__bridge id)kSecClass,
+		server, (__bridge id)kSecAttrServer,
+		username, (__bridge id)kSecAttrAccount,
+		nil];
 
-+ (id)_internetKeychainItemWithCoreKeychainItem:(SecKeychainItemRef)coreKeychainItem
-									  forServer:(NSString *)server
-									   username:(NSString *)username
-									   password:(NSString *)password
-										   path:(NSString *)path
-										   port:(NSInteger)port
-									   protocol:(SecProtocolType)protocol
-{
-	return [[[EMInternetKeychainItem alloc] _initWithCoreKeychainItem:coreKeychainItem
-															   server:server
-															 username:username
-															 password:password
-																 path:path
-																 port:port
-															 protocol:protocol] autorelease];
-}
+	if (path && path.length > 0)
+		query[(__bridge id)kSecAttrPath] = path;
+	if (port > 0)
+		query[(__bridge id)kSecAttrPort] = @(port);
+	if (protocol != 0)
+		query[(__bridge id)kSecAttrProtocol] = @(protocol);
 
-#pragma mark -
+	return query;
+}
 
 + (EMInternetKeychainItem *)internetKeychainItemForServer:(NSString *)server
 											 withUsername:(NSString *)username
@@ -346,38 +234,33 @@ static BOOL _logsErrors;
 {
 	if (!server || !username)
 		return nil;
-	
-	const char *serverCString = [server UTF8String];
-	const char *usernameCString = [username UTF8String];
-	const char *pathCString = [path UTF8String];
-	
-	if (!path || [path length] == 0)
-		pathCString = "";
-	
-	UInt32 passwordLength = 0;
-	char *password = nil;
-	
-	SecKeychainItemRef item = nil;
-	//0 is kSecAuthenticationTypeAny
-	OSStatus returnStatus = SecKeychainFindInternetPassword(NULL, strlen(serverCString), serverCString, 0, NULL, strlen(usernameCString), usernameCString, strlen(pathCString), pathCString, port, protocol, 0, &passwordLength, (void **)&password, &item);
-	
-	if (returnStatus != noErr && protocol == kSecProtocolTypeFTP)
-	{
-		//Some clients (like Transmit) still save passwords with kSecProtocolTypeFTPAccount, which was deprecated.  Let's check for that.
-		protocol = kSecProtocolTypeFTPAccount;		
-		returnStatus = SecKeychainFindInternetPassword(NULL, strlen(serverCString), serverCString, 0, NULL, strlen(usernameCString), usernameCString, strlen(pathCString), pathCString, port, protocol, 0, &passwordLength, (void **)&password, &item);
+
+	EMInternetKeychainItem *temp = [[EMInternetKeychainItem alloc] _initWithServer:server username:username password:nil path:path port:port protocol:protocol];
+
+	NSMutableDictionary *query = [temp _queryForServer:server username:username path:path port:port protocol:protocol];
+	query[(__bridge id)kSecReturnData] = @YES;
+	query[(__bridge id)kSecMatchLimit] = (__bridge id)kSecMatchLimitOne;
+
+	CFTypeRef result = NULL;
+	OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)query, &result);
+
+	if (status != errSecSuccess && protocol == kSecProtocolTypeFTP) {
+		query[(__bridge id)kSecAttrProtocol] = @(kSecProtocolTypeFTPAccount);
+		status = SecItemCopyMatching((__bridge CFDictionaryRef)query, &result);
+		if (status == errSecSuccess)
+			protocol = kSecProtocolTypeFTPAccount;
 	}
-	
-	if (returnStatus != noErr || !item)
-	{
+
+	if (status != errSecSuccess || !result) {
 		if (_logsErrors)
-			NSLog(@"Error (%@) - %s", NSStringFromSelector(_cmd), GetMacOSStatusErrorString(returnStatus));
+			NSLog(@"Error (%@) - OSStatus %d", NSStringFromSelector(_cmd), (int)status);
 		return nil;
 	}
-	NSString *passwordString = [[[NSString alloc] initWithData:[NSData dataWithBytes:password length:passwordLength] encoding:NSUTF8StringEncoding] autorelease];
-	SecKeychainItemFreeContent(NULL, password);
-	
-	return [EMInternetKeychainItem _internetKeychainItemWithCoreKeychainItem:item forServer:server username:username password:passwordString path:path port:port protocol:protocol];
+
+	NSData *passwordData = (__bridge_transfer NSData *)result;
+	NSString *password = [[NSString alloc] initWithData:passwordData encoding:NSUTF8StringEncoding];
+
+	return [[EMInternetKeychainItem alloc] _initWithServer:server username:username password:password path:path port:port protocol:protocol];
 }
 
 + (EMInternetKeychainItem *)addInternetKeychainItemForServer:(NSString *)server
@@ -389,84 +272,76 @@ static BOOL _logsErrors;
 {
 	if (!username || !server || !password)
 		return nil;
-	
-	const char *serverCString = [server UTF8String];
-	const char *usernameCString = [username UTF8String];
-	const char *passwordCString = [password UTF8String];
-	const char *pathCString = [path UTF8String];
-	
-	if (!path || [path length] == 0)
-		pathCString = "";
-	
-	SecKeychainItemRef item = nil;
-	OSStatus returnStatus = SecKeychainAddInternetPassword(NULL, strlen(serverCString), serverCString, 0, NULL, strlen(usernameCString), usernameCString, strlen(pathCString), pathCString, port, protocol, kSecAuthenticationTypeDefault, strlen(passwordCString), (void *)passwordCString, &item);
-	
-	if (returnStatus != noErr || !item)
-	{
+
+	NSMutableDictionary *query = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+		(__bridge id)kSecClassInternetPassword, (__bridge id)kSecClass,
+		server, (__bridge id)kSecAttrServer,
+		username, (__bridge id)kSecAttrAccount,
+		[password dataUsingEncoding:NSUTF8StringEncoding], (__bridge id)kSecValueData,
+		nil];
+
+	if (path && path.length > 0)
+		query[(__bridge id)kSecAttrPath] = path;
+	if (port > 0)
+		query[(__bridge id)kSecAttrPort] = @(port);
+	if (protocol != 0)
+		query[(__bridge id)kSecAttrProtocol] = @(protocol);
+
+	OSStatus status = SecItemAdd((__bridge CFDictionaryRef)query, NULL);
+
+	if (status != errSecSuccess) {
 		if (_logsErrors)
-			NSLog(@"Error (%@) - %s", NSStringFromSelector(_cmd), GetMacOSStatusErrorString(returnStatus));
+			NSLog(@"Error (%@) - OSStatus %d", NSStringFromSelector(_cmd), (int)status);
 		return nil;
 	}
-	return [EMInternetKeychainItem _internetKeychainItemWithCoreKeychainItem:item forServer:server username:username password:password path:path port:port protocol:protocol];
+
+	return [[EMInternetKeychainItem alloc] _initWithServer:server username:username password:password path:path port:port protocol:protocol];
+}
+
+- (void)removeFromKeychain
+{
+	if (!mServer) return;
+
+	NSDictionary *query = [self _queryForServer:mServer username:self.username path:mPath port:mPort protocol:mProtocol];
+	SecItemDelete((__bridge CFDictionaryRef)query);
 }
 
 #pragma mark Internet Properties
 
 @dynamic server;
+- (NSString *)server { return mServer; }
 - (void)setServer:(NSString *)newServer
 {
-	@synchronized (self)
-	{
-		if (mServer == newServer)
-			return;
-		
-		[mServer release];
-		mServer = [newServer copy];	
-		
-		const char *newServerCString = [newServer UTF8String];
-		[self _modifyAttributeWithTag:kSecServerItemAttr toBeValue:(void *)newServerCString ofLength:strlen(newServerCString)];
+	@synchronized (self) {
+		if (mServer == newServer) return;
+		mServer = [newServer copy];
 	}
 }
 
 @dynamic path;
+- (NSString *)path { return mPath; }
 - (void)setPath:(NSString *)newPath
 {
-	if (mPath == newPath)
-		return;
-	
-	[mPath release];
+	if (mPath == newPath) return;
 	mPath = [newPath copy];
-	
-	const char *newPathCString = [newPath UTF8String];
-	[self _modifyAttributeWithTag:kSecPathItemAttr toBeValue:(void *)newPathCString ofLength:strlen(newPathCString)];
 }
 
 @dynamic port;
+- (NSInteger)port { return mPort; }
 - (void)setPort:(NSInteger)newPort
 {
-	@synchronized (self)
-	{
-		if (mPort == newPort)
-			return;
-		
+	@synchronized (self) {
 		mPort = newPort;
-		
-		UInt32 newPortValue = newPort;
-		[self _modifyAttributeWithTag:kSecPortItemAttr toBeValue:&newPortValue ofLength:sizeof(newPortValue)];
 	}
 }
 
 @dynamic protocol;
+- (SecProtocolType)protocol { return mProtocol; }
 - (void)setProtocol:(SecProtocolType)newProtocol
 {
-	@synchronized (self)
-	{
-		if (mProtocol == newProtocol)
-			return;
-		
+	@synchronized (self) {
 		mProtocol = newProtocol;
-		
-		[self _modifyAttributeWithTag:kSecProtocolItemAttr toBeValue:&newProtocol ofLength:sizeof(newProtocol)];
 	}
 }
+
 @end

@@ -17,72 +17,48 @@
  */
 
 + (NSArray *) promptForPassword:(NSString*)hostname user:(NSString*) username {
-	CFUserNotificationRef passwordDialog;
-	SInt32 error;
-	CFOptionFlags responseFlags;
-	int button;
-	CFStringRef passwordRef;
-	bool saveToKeychain;
-	
-	NSMutableArray *returnArray = [NSMutableArray arrayWithObjects:@"PasswordString",[NSNumber numberWithInt:0], [NSNumber numberWithBool:TRUE], nil];
-	
+	NSMutableArray *returnArray = [NSMutableArray arrayWithObjects:@"PasswordString",
+								   [NSNumber numberWithInt:0],
+								   [NSNumber numberWithBool:TRUE], nil];
+
 	NSString *passwordMessageString = [NSString stringWithFormat:@"Please enter your password for %@@%@.",
-									   username,
-									   hostname];
-	
-	NSDictionary *panelDict = [NSDictionary dictionaryWithObjectsAndKeys:@"Sidestep: Connecting to your secure server...",
-							   kCFUserNotificationAlertHeaderKey,passwordMessageString,kCFUserNotificationAlertMessageKey,
-							   @"Password:",kCFUserNotificationTextFieldTitlesKey,
-							   @"Save in Keychain",kCFUserNotificationCheckBoxTitlesKey,
-							   @"Cancel",kCFUserNotificationAlternateButtonTitleKey,
-							   nil];
-	
-	passwordDialog = CFUserNotificationCreate(kCFAllocatorDefault,
-											  0,
-											  kCFUserNotificationPlainAlertLevel
-											  |
-											  CFUserNotificationSecureTextField(0),
-											  &error,
-											  (CFDictionaryRef)panelDict);
-	
-	
-	if (error){
-		// There was an error creating the password dialog
-		CFRelease(passwordDialog);
-		[returnArray replaceObjectAtIndex:1 withObject:[NSNumber numberWithInt:error]];
-		return returnArray;
-	}
-	
-	error = CFUserNotificationReceiveResponse(passwordDialog,
-											  0,
-											  &responseFlags);
+									   username, hostname];
 
-	if (error){
-		CFRelease(passwordDialog);
-		[returnArray replaceObjectAtIndex:1 withObject:[NSNumber numberWithInt:error]];
-		return returnArray;
-	}
-	
-	
-	button = responseFlags & 0x3;
-	if (button == kCFUserNotificationAlternateResponse) {
-		CFRelease(passwordDialog);
+	// Build accessory view: secure text field + "Save in Keychain" checkbox
+	NSSecureTextField *passwordField = [[NSSecureTextField alloc] initWithFrame:NSMakeRect(0, 28, 300, 22)];
+	NSButton *saveCheckbox = [[NSButton alloc] initWithFrame:NSMakeRect(0, 0, 300, 22)];
+	[saveCheckbox setButtonType:NSButtonTypeSwitch];
+	[saveCheckbox setTitle:@"Save in Keychain"];
+	[saveCheckbox setState:NSControlStateValueOn];
+
+	NSView *accessoryView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 300, 56)];
+	[accessoryView addSubview:passwordField];
+	[accessoryView addSubview:saveCheckbox];
+
+	NSAlert *alert = [[NSAlert alloc] init];
+	[alert setAlertStyle:NSAlertStyleInformational];
+	[alert setMessageText:@"Sidestep: Connecting to your secure server..."];
+	[alert setInformativeText:passwordMessageString];
+	[alert addButtonWithTitle:@"OK"];
+	[alert addButtonWithTitle:@"Cancel"];
+	[alert setAccessoryView:accessoryView];
+	[[alert window] setInitialFirstResponder:passwordField];
+
+	NSModalResponse response = [alert runModal];
+
+	if (response == NSAlertSecondButtonReturn) {
+		// User clicked Cancel
 		[returnArray replaceObjectAtIndex:1 withObject:[NSNumber numberWithInt:1]];
-		return returnArray;		
+		return returnArray;
 	}
-	
-	passwordRef = CFUserNotificationGetResponseValue(passwordDialog,
-													 kCFUserNotificationTextFieldValuesKey,
-													 0);
-	
-	saveToKeychain = responseFlags & CFUserNotificationCheckBoxChecked(0);
 
-	[returnArray replaceObjectAtIndex:0 withObject:(NSString*)passwordRef];
+	NSString *password = [passwordField stringValue];
+	BOOL saveToKeychain = ([saveCheckbox state] == NSControlStateValueOn);
+
+	[returnArray replaceObjectAtIndex:0 withObject:password];
 	[returnArray replaceObjectAtIndex:2 withObject:[NSNumber numberWithBool:saveToKeychain]];
 
-	CFRelease(passwordDialog); // Note that this will release the passwordRef as well
-	
-	return returnArray;	
+	return returnArray;
 }
 
 /*
@@ -137,18 +113,16 @@
 																							protocol:kSecProtocolTypeSSH];
 	
 	if (keychainItem) {
-		// The keychain item already exists but it needs to be updated
-		[keychainItem setPassword:newPassword];
+		// Update existing item: delete and re-add with new password
+		[keychainItem removeFromKeychain];
 	}
-	else {
-		// The keychain item needs to be added
-		[EMInternetKeychainItem addInternetKeychainItemForServer	:hostname
-														withUsername:username
-															password:newPassword
-																path:@""
-																port:0
-															protocol:kSecProtocolTypeSSH];
-	}
+	// Add (or re-add) the keychain item
+	[EMInternetKeychainItem addInternetKeychainItemForServer:hostname
+												withUsername:username
+													password:newPassword
+														path:@""
+														port:0
+													protocol:kSecProtocolTypeSSH];
 	
 	return TRUE;
 	
