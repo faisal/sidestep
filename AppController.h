@@ -70,7 +70,11 @@
 	NSTask *SSHConnection;
 	Boolean SSHConnecting;
 	Boolean SSHConnected;
-	
+	Boolean VPNConnected;
+
+	Boolean wasSSHConnectedBeforeSleep;
+	Boolean wasVPNConnectedBeforeSleep;
+
 	NSString *currentNetworkSecurityType;
 }
 

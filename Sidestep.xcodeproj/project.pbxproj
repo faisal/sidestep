@@ -39,7 +39,7 @@
 		61B3E63B127ACB420011E198 /* DefaultsController.m in Sources */ = {isa = PBXBuildFile; fileRef = 61B3E63A127ACB420011E198 /* DefaultsController.m */; };
 		61B3E827127BA7A50011E198 /* WatchSSHConnectionForChanges.sh in Resources */ = {isa = PBXBuildFile; fileRef = 61B3E825127BA7A50011E198 /* WatchSSHConnectionForChanges.sh */; };
 		61BA522212823CF100BD1D72 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 61BA522112823CF100BD1D72 /* Sparkle.framework */; };
-		61BA523112823D4300BD1D72 /* Sparkle.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 61BA522112823CF100BD1D72 /* Sparkle.framework */; };
+		61BA523112823D4300BD1D72 /* Sparkle.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 61BA522112823CF100BD1D72 /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		61FB5F5A1280E970003229D7 /* ProxySetter.m in Sources */ = {isa = PBXBuildFile; fileRef = 61FB5F591280E970003229D7 /* ProxySetter.m */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };

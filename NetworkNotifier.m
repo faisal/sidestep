@@ -17,6 +17,8 @@
 #import "AppController.h"
 #import "AppUtilities.h"
 
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+
 @implementation NetworkNotifier {
 	id airportConnectionNotifyObject;
 	SEL airportConnectionNotifySelector;
@@ -90,9 +92,10 @@
 	XLog(self, @"Getting network security type");
 
 	CWInterface *iface = wifiClient.interface;
-	if (!iface) {
-		XLog(self, @"No Wi-Fi interface found");
-		[object performSelector:selector withObject:@"unknown"];
+	if (!iface || iface.ssid == nil) {
+		// No interface or not associated — treat as no network
+		XLog(self, @"No Wi-Fi interface or not associated");
+		[object performSelector:selector withObject:@""];
 		return YES;
 	}
 

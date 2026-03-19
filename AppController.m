@@ -82,7 +82,11 @@ NSInteger GrowlSpam_TestConnection					= 0;
 		SSHConnection = nil;
 		SSHConnecting = FALSE;
 		SSHConnected = FALSE;
-		
+		VPNConnected = FALSE;
+
+		wasSSHConnectedBeforeSleep = FALSE;
+		wasVPNConnectedBeforeSleep = FALSE;
+
 		currentNetworkSecurityType = nil;
     }
 	
@@ -521,13 +525,14 @@ NSInteger GrowlSpam_TestConnection					= 0;
 	}
 	else {
 		if (result == 1) {
+			VPNConnected = TRUE;
 			[growl message:connectedVPNText];
 		}
 		else {
 			[growl message:unknownVPNText];
 		}
 	}
-	
+
 	initiatedDelayedConnectionAttempt = FALSE;
 
 	} // @autoreleasepool
@@ -542,6 +547,7 @@ NSInteger GrowlSpam_TestConnection					= 0;
 	}
 	else {
 		if (result == 1) {
+			VPNConnected = FALSE;
 			[growl message:disconnectedVPNText];
 		}
 		else {
@@ -675,12 +681,23 @@ NSInteger GrowlSpam_TestConnection					= 0;
 	if (!testingConnection) {
 		[self performSelectorOnMainThread:@selector(updateUIForSSHConnectionClosed) withObject:nil waitUntilDone:FALSE];
 	}
-	
-	[growl message:restoredDirectConnectionStatusText];
-	
+
+	BOOL wasConnected = SSHConnected;
 	SSHConnection = nil;
 	SSHConnected = FALSE;
 	SSHConnecting = FALSE;
+
+	// Auto-reconnect if the tunnel dropped unexpectedly (not from sleep, not user-initiated)
+	if (!testingConnection && wasConnected && !wasSSHConnectedBeforeSleep &&
+		[defaultsController rerouteAutomaticallyEnabled] &&
+		[currentNetworkSecurityType isEqualToString:@"none"]) {
+		[growl message:@"Tunnel dropped unexpectedly. Reconnecting..."];
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+			[self openSSHConnectionAfterDelay:0];
+		});
+	} else {
+		[growl message:restoredDirectConnectionStatusText];
+	}
 
 }
 
@@ -723,14 +740,31 @@ NSInteger GrowlSpam_TestConnection					= 0;
     
 }
 
-- (void) receiveSleepNote: (NSNotification*) note
-{
-    NSLog(@"receiveSleepNote: %@", [note name]);
+- (void)receiveSleepNote:(NSNotification *)note {
+	XLog(self, @"System going to sleep");
+
+	wasSSHConnectedBeforeSleep = SSHConnected || SSHConnecting;
+	wasVPNConnectedBeforeSleep = VPNConnected;
+
+	if (wasSSHConnectedBeforeSleep || wasVPNConnectedBeforeSleep) {
+		[growl message:@"Going to sleep. Disconnecting tunnel."];
+	}
+
+	if (wasSSHConnectedBeforeSleep) {
+		[self closeSSHConnection];
+	}
+	if (wasVPNConnectedBeforeSleep) {
+		[self closeVPNConnection];
+	}
 }
 
-- (void) receiveWakeNote: (NSNotification*) note
-{
-    NSLog(@"receiveSleepNote: %@", [note name]);
+- (void)receiveWakeNote:(NSNotification *)note {
+	XLog(self, @"System woke from sleep — waiting 5 seconds for network");
+
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+		[networkNotifier getNetworkSecurityTypeAndNotifyObject:self
+												 withSelector:@selector(connectedToAirportNetworkWithSecurityType:)];
+	});
 }
 
 
