@@ -93,27 +93,28 @@
 
 	CWInterface *iface = wifiClient.interface;
 	if (!iface) {
-		// No Wi-Fi interface present
 		XLog(self, @"No Wi-Fi interface found");
 		[object performSelector:selector withObject:@""];
 		return YES;
 	}
 
-	CWSecurity security = iface.security;
-
-	// kCWSecurityUnknown is returned when not associated with any network.
-	// Note: CWInterface.ssid requires com.apple.developer.networking.wifi-info
-	// and always returns nil without it, so we cannot use ssid as the association check.
-	if (security == kCWSecurityUnknown) {
-		XLog(self, @"Not associated with any Wi-Fi network");
+	// interfaceMode does not require the wifi-info entitlement and reliably indicates
+	// whether the interface is associated. ssid/security return nil/kCWSecurityUnknown
+	// without com.apple.developer.networking.wifi-info on macOS 12+, so we cannot use
+	// them as the primary association check.
+	if (iface.interfaceMode == kCWInterfaceModeNone) {
+		XLog(self, @"Wi-Fi interface not associated with any network");
 		[object performSelector:selector withObject:@""];
 		return YES;
 	}
 
+	// Interface is associated. security may return kCWSecurityUnknown if the wifi-info
+	// entitlement is absent; securityTypeStringForCWSecurity maps that to "unknown",
+	// which AppController treats as a secure network (correct safe default).
+	CWSecurity security = iface.security;
 	NSString *securityString = [NetworkNotifier securityTypeStringForCWSecurity:security];
 
 	XLog(self, @"Network security type: %@", securityString);
-
 	[object performSelector:selector withObject:securityString];
 
 	return YES;
