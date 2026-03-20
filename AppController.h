@@ -17,9 +17,9 @@
 #import "VPNInterfacer.h"
 #import "PasswordController.h"
 #import "AppUtilities.h"
-#import "GrowlMessage.h"
+#import <UserNotifications/UserNotifications.h>
 
-@interface AppController : NSObject <NSTextFieldDelegate>
+@interface AppController : NSObject <NSTextFieldDelegate, UNUserNotificationCenterDelegate>
 
 // Top-level nib objects (strong — not retained by a parent view)
 @property (strong, nonatomic) IBOutlet NSMenu *statusMenu;

@@ -43,7 +43,6 @@
 		AABB000100000000CW000002 /* CoreWLAN.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AABB000100000000CW000001 /* CoreWLAN.framework */; };
 		AABB000100000000SM000006 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AABB000100000000SM000005 /* ServiceManagement.framework */; };
 		AABB000100000000UN000006 /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AABB000100000000UN000005 /* UserNotifications.framework */; };
-		AAE84BF6129F7A8600320F49 /* GrowlMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = AAE84BF5129F7A8600320F49 /* GrowlMessage.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -137,8 +136,6 @@
 		AABB000100000000CW000001 /* CoreWLAN.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreWLAN.framework; path = System/Library/Frameworks/CoreWLAN.framework; sourceTree = SDKROOT; };
 		AABB000100000000SM000005 /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = System/Library/Frameworks/ServiceManagement.framework; sourceTree = SDKROOT; };
 		AABB000100000000UN000005 /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
-		AAE84BF4129F7A8600320F49 /* GrowlMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GrowlMessage.h; sourceTree = "<group>"; };
-		AAE84BF5129F7A8600320F49 /* GrowlMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GrowlMessage.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -192,9 +189,7 @@
 				61B3E63A127ACB420011E198 /* DefaultsController.m */,
 				61FB5F581280E970003229D7 /* ProxySetter.h */,
 				61FB5F591280E970003229D7 /* ProxySetter.m */,
-				AAE84BF4129F7A8600320F49 /* GrowlMessage.h */,
-				AAE84BF5129F7A8600320F49 /* GrowlMessage.m */,
-				613F9D2812AD8D4300B13A60 /* VPNInterfacer.h */,
+					613F9D2812AD8D4300B13A60 /* VPNInterfacer.h */,
 				613F9D2912AD8D4300B13A60 /* VPNInterfacer.m */,
 			);
 			name = Classes;
@@ -405,7 +400,6 @@
 				61FB5F5A1280E970003229D7 /* ProxySetter.m in Sources */,
 				616141D412971C1B0090EE00 /* LoginItemController.m in Sources */,
 				61A926941299C11100B6B66B /* EMKeychainItem.m in Sources */,
-				AAE84BF6129F7A8600320F49 /* GrowlMessage.m in Sources */,
 				613F9D2A12AD8D4300B13A60 /* VPNInterfacer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

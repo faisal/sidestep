@@ -7,7 +7,6 @@
 //
 
 #import "AppController.h"
-#import "GrowlMessage.h"
 
 @interface AppController () {
     NSStatusItem *statusItem;
@@ -21,7 +20,6 @@
     ProxySetter *proxySetter;
     VPNInterfacer *vpnInterfacer;
 
-    GrowlMessage *growl;
     SPUStandardUpdaterController *updaterController;
 
     BOOL initiatedDelayedConnectionAttempt;
@@ -111,7 +109,7 @@ NSInteger GrowlSpam_TestConnection    = 0;
         proxySetter       = [[ProxySetter alloc] init];
         vpnInterfacer     = [[VPNInterfacer alloc] init];
 
-        growl = [[GrowlMessage alloc] init];
+        UNUserNotificationCenter.currentNotificationCenter.delegate = self;
 
         updaterController = [[SPUStandardUpdaterController alloc]
                              initWithStartingUpdater:NO
@@ -143,7 +141,11 @@ NSInteger GrowlSpam_TestConnection    = 0;
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
 
-    [growl requestAuthorization];
+    [UNUserNotificationCenter.currentNotificationCenter
+        requestAuthorizationWithOptions:UNAuthorizationOptionAlert | UNAuthorizationOptionSound
+        completionHandler:^(BOOL granted, NSError *error) {
+            if (error) NSLog(@"UserNotifications authorization error: %@", error);
+        }];
 
     NSInteger previousPID = [defaultsController getSSHConnectionPID];
 
@@ -390,7 +392,7 @@ NSInteger GrowlSpam_TestConnection    = 0;
                 [self openVPNConnectionNow];
             });
         } else {
-            [growl message:noVPNText];
+            [self postNotification:noVPNText];
         }
     }
 }
@@ -404,7 +406,7 @@ NSInteger GrowlSpam_TestConnection    = 0;
             [self closeVPNConnectionThread];
         });
     } else {
-        [growl message:noVPNText];
+        [self postNotification:noVPNText];
     }
 }
 
@@ -508,9 +510,9 @@ NSInteger GrowlSpam_TestConnection    = 0;
     } else {
         if (result == 1) {
             VPNConnected = YES;
-            [growl message:connectedVPNText];
+            [self postNotification:connectedVPNText];
         } else {
-            [growl message:unknownVPNText];
+            [self postNotification:unknownVPNText];
         }
     }
 
@@ -529,9 +531,9 @@ NSInteger GrowlSpam_TestConnection    = 0;
     } else {
         if (result == 1) {
             VPNConnected = NO;
-            [growl message:disconnectedVPNText];
+            [self postNotification:disconnectedVPNText];
         } else {
-            [growl message:unknownVPNText];
+            [self postNotification:unknownVPNText];
         }
     }
 
@@ -683,13 +685,13 @@ NSInteger GrowlSpam_TestConnection    = 0;
     if (!testingConnection && wasConnected && !wasSSHConnectedBeforeSleep &&
         [defaultsController rerouteAutomaticallyEnabled] &&
         [currentNetworkSecurityType isEqualToString:@"none"]) {
-        [growl message:@"Tunnel dropped unexpectedly. Reconnecting..."];
+        [self postNotification:@"Tunnel dropped unexpectedly. Reconnecting..."];
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC),
                        dispatch_get_main_queue(), ^{
             [self openSSHConnectionAfterDelay:0];
         });
     } else {
-        [growl message:restoredDirectConnectionStatusText];
+        [self postNotification:restoredDirectConnectionStatusText];
     }
 }
 
@@ -736,7 +738,7 @@ NSInteger GrowlSpam_TestConnection    = 0;
     wasVPNConnectedBeforeSleep = VPNConnected;
 
     if (wasSSHConnectedBeforeSleep || wasVPNConnectedBeforeSleep) {
-        [growl message:@"Going to sleep. Disconnecting tunnel."];
+        [self postNotification:@"Going to sleep. Disconnecting tunnel."];
     }
 
     if (wasSSHConnectedBeforeSleep) {
@@ -770,7 +772,7 @@ NSInteger GrowlSpam_TestConnection    = 0;
         connectionStatus.title = noNetworkConnectionStatusText;
 
         if (GrowlSpam_ConnectionType != 1 && GrowlSpam_TestConnection != 1) {
-            [growl message:noNetworkConnectionStatusText];
+            [self postNotification:noNetworkConnectionStatusText];
             GrowlSpam_ConnectionType = 1;
             GrowlSpam_TestConnection = 0;
         }
@@ -779,7 +781,7 @@ NSInteger GrowlSpam_TestConnection    = 0;
     } else if ([currentNetworkSecurityType isEqualToString:@"none"]) {
         connectionStatus.title = openConnectionStatusText;
         if (GrowlSpam_ConnectionType != 2) {
-            [growl message:openConnectionStatusText];
+            [self postNotification:openConnectionStatusText];
             GrowlSpam_ConnectionType = 2;
         }
         statusItem.button.image = statusImageDirectInsecure;
@@ -787,7 +789,7 @@ NSInteger GrowlSpam_TestConnection    = 0;
     } else {
         connectionStatus.title = protectedConnectionStatusText;
         if (GrowlSpam_ConnectionType != 3) {
-            [growl message:protectedConnectionStatusText];
+            [self postNotification:protectedConnectionStatusText];
             GrowlSpam_ConnectionType = 3;
         }
         statusItem.button.image = statusImageDirectSecure;
@@ -806,7 +808,7 @@ NSInteger GrowlSpam_TestConnection    = 0;
 
     connectionStatus.title = connectingConnectionStatusText;
     if (GrowlSpam_ConnectingToProxy == 0) {
-        [growl message:connectingConnectionStatusText];
+        [self postNotification:connectingConnectionStatusText];
         GrowlSpam_ConnectingToProxy = 1;
     }
 
@@ -818,7 +820,7 @@ NSInteger GrowlSpam_TestConnection    = 0;
     XLog(self, @"Called updateUIForSSHConnectionOpened");
 
     connectionStatus.title = proxyConnectedConnectionStatusText;
-    [growl message:proxyConnectedConnectionStatusText];
+    [self postNotification:proxyConnectedConnectionStatusText];
 
     // Reset GrowlSpam variable to allow notifications now that spam should have ended
     GrowlSpam_ConnectingToProxy = 0;
@@ -862,7 +864,7 @@ NSInteger GrowlSpam_TestConnection    = 0;
     XLog(self, @"Called updateUIForTestingSSHConnectionOpening");
 
     testConnectionStatusField.stringValue = testingConnectionStatusText;
-    [growl message:testingConnectionStatusText];
+    [self postNotification:testingConnectionStatusText];
 
     // Prevent wireless status from appearing after test
     GrowlSpam_TestConnection = 1;
@@ -873,7 +875,7 @@ NSInteger GrowlSpam_TestConnection    = 0;
     XLog(self, @"Called updateUIForTestingSSHConnectionSucceeded");
 
     testConnectionStatusField.stringValue = sucessTestingConnectionStatusText;
-    [growl message:sucessTestingConnectionStatusText];
+    [self postNotification:sucessTestingConnectionStatusText];
 
     // Allow messages to appear if the user connects to a different network of the same type
     GrowlSpam_ConnectionType = 0;
@@ -885,11 +887,11 @@ NSInteger GrowlSpam_TestConnection    = 0;
 
     if ([errorCode isEqualToString:@"2"]) {
         testConnectionStatusField.stringValue = authFailedTestingConnectionStatusText;
-        [growl message:authFailedTestingConnectionStatusText];
+        [self postNotification:authFailedTestingConnectionStatusText];
     } else if ([errorCode isEqualToString:@"3"] || [errorCode isEqualToString:@"4"] ||
                [errorCode isEqualToString:@"5"]) {
         testConnectionStatusField.stringValue = reachFailedTestingConnectionStatusText;
-        [growl message:reachFailedTestingConnectionStatusText];
+        [self postNotification:reachFailedTestingConnectionStatusText];
     }
 
     // Allow messages to appear if the user connects to a different network of the same type
@@ -1106,6 +1108,38 @@ NSInteger GrowlSpam_TestConnection    = 0;
         [defaultsController setAdditionalArguments:control.stringValue];
         [self updateSSHCommand];
     }
+}
+
+
+/*
+ *  Notifications
+ *******************************************************************************
+ */
+
+- (void)postNotification:(NSString *)message {
+    if (![[NSUserDefaults standardUserDefaults] boolForKey:@"sidestep_GrowlSetting"])
+        return;
+
+    UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];
+    content.title = @"Sidestep";
+    content.body = message;
+    content.sound = UNNotificationSound.defaultSound;
+
+    NSString *identifier = [NSString stringWithFormat:@"sidestep-%@", [[NSUUID UUID] UUIDString]];
+    UNNotificationRequest *request = [UNNotificationRequest requestWithIdentifier:identifier
+                                                                          content:content
+                                                                          trigger:nil];
+    [UNUserNotificationCenter.currentNotificationCenter
+        addNotificationRequest:request
+        withCompletionHandler:^(NSError *error) {
+            if (error) NSLog(@"UserNotifications error: %@", error);
+        }];
+}
+
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center
+       willPresentNotification:(UNNotification *)notification
+         withCompletionHandler:(void (^)(UNNotificationPresentationOptions))completionHandler {
+    completionHandler(UNNotificationPresentationOptionBanner | UNNotificationPresentationOptionSound);
 }
 
 @end
