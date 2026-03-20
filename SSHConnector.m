@@ -123,9 +123,7 @@ NSString *terminateCommand = @"Sidestep: Terminate connection attempt manually\n
 	[taskObject setStandardError:errorPipe];
 	
 	// Get the path of the Askpass program, which is included as part of the main application bundle
-	NSString *askPassPath = [NSBundle pathForResource:@"SSHAskPass"
-											   ofType:@""
-										  inDirectory:[[NSBundle mainBundle] bundlePath]];
+	NSString *askPassPath = [[NSBundle mainBundle] pathForAuxiliaryExecutable:@"SSHAskPass"];
 	
 	XLog(self, @"AskPass path: %@",askPassPath);
 	

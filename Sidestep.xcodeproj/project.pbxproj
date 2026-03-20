@@ -75,6 +75,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA00000000000000AA000010 /* CopyFiles (MacOS) */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				61B3E4D0127A7D3B0011E198 /* SSHAskPass in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -300,6 +310,7 @@
 				8D11072E0486CEB800E47090 /* Frameworks */,
 				AAE84BF0129F7A4D00320F49 /* CopyFiles */,
 				AAE84BF7129F7A8600320F49 /* CopyFiles */,
+				AA00000000000000AA000010 /* CopyFiles (MacOS) */,
 			);
 			buildRules = (
 			);
@@ -350,7 +361,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				61B3E4D0127A7D3B0011E198 /* SSHAskPass in Resources */,
 				8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */,
 				1DDD58160DA1D0A300B32029 /* Sidestep.xib in Resources */,
 				61B3E827127BA7A50011E198 /* WatchSSHConnectionForChanges.sh in Resources */,
