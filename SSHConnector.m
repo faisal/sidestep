@@ -8,314 +8,300 @@
 
 #import "SSHConnector.h"
 #import "AppUtilities.h"
+#import "SidestepLog.h"
 #include <signal.h>
 #include <unistd.h>
 
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
 
+// Private state for in-progress connection monitoring
+@interface SSHConnector () {
+    BOOL _terminating;
+    dispatch_source_t _watchdogTimer;
+    dispatch_once_t _resultToken;       // ensures success/failure callback fires exactly once
+    NSMutableData *_stderrBuffer;       // accumulates partial SSH stderr lines
+}
+@end
+
 @implementation SSHConnector
 
-/*	
- *	Constants
- */
-
-NSString *SSHLogPath = @"/tmp/sidestepssh.log";
-NSString *terminateCommand = @"Sidestep: Terminate connection attempt manually\n";
-
 /*
- *	Creates a NSTask object for the SSH connection
- *
- *	argument: username for server
- *	argument: hostname for server
- *	argument: remoteport for server
- *	argument: localbindport for socks proxy
- *	argument: additional arguments for ssh task
- *	argument: compression argument for ssh task
- *	return: NSTask object for ssh command on success
- *	return: nil on error
+ *  Creates a NSTask object for the SSH connection.
  */
-
 - (NSTask *)sshTaskWithUsername:(NSString *)username
-				   withHostname:(NSString *)hostname
-				 withRemotePort:(NSString *)remoteport
-			  withLocalBindPort:(NSNumber *)localPort
-		withAdditionalArguments:(NSString *)additionalArgs
-			 withSSHCompression:(BOOL)sshCompression {
+                   withHostname:(NSString *)hostname
+                 withRemotePort:(NSString *)remoteport
+              withLocalBindPort:(NSNumber *)localPort
+        withAdditionalArguments:(NSString *)additionalArgs
+             withSSHCompression:(BOOL)sshCompression {
 
-	NSTask *taskObject = [[NSTask alloc] init];
+    NSTask *taskObject = [[NSTask alloc] init];
 
-	// Set up arguments for the ssh command
-	NSMutableArray *args = [NSMutableArray new];
-	[args addObject:[NSString stringWithFormat:@"%@@%@",username,hostname]];
-	[args addObject:[NSString stringWithFormat:@"-D %@", localPort]];
-	[args addObject:[NSString stringWithFormat:@"-p %@", remoteport]];
+    // Build argv entries — each flag and its value are separate elements so that
+    // NSTask (via execve) passes them correctly to ssh's getopt() parser.
+    NSMutableArray *args = [NSMutableArray new];
+    [args addObject:[NSString stringWithFormat:@"%@@%@", username, hostname]];
+    [args addObject:@"-D"]; [args addObject:[localPort description]];
+    [args addObject:@"-p"]; [args addObject:remoteport];
     if (sshCompression) {
         [args addObject:@"-C"];
     }
-	[args addObject:@"-N"];
-	[args addObject:@"-v"];
-	[args addObject:@"-o TCPKeepAlive=yes"];
-	[args addObject:@"-o ServerAliveInterval=30"];
-	
-	if ([additionalArgs length]) {
-		NSArray *separatedArgs = [additionalArgs componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-		if ([separatedArgs count]) {
-			[args addObjectsFromArray:separatedArgs];
-		}
-	}
-	
-	// Set up task arguments and launch path
-	[taskObject setArguments:args];
-	[taskObject setLaunchPath:@"/usr/bin/ssh"];
-	
-	return taskObject;
+    [args addObject:@"-N"];
+    [args addObject:@"-v"];
+    [args addObject:@"-o"]; [args addObject:@"TCPKeepAlive=yes"];
+    [args addObject:@"-o"]; [args addObject:@"ServerAliveInterval=30"];
+    [args addObject:@"-o"]; [args addObject:@"ConnectTimeout=30"];
+
+    if ([additionalArgs length]) {
+        NSArray *separatedArgs = [additionalArgs componentsSeparatedByCharactersInSet:
+                                  [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+        NSArray *filtered = [separatedArgs filteredArrayUsingPredicate:
+                             [NSPredicate predicateWithFormat:@"length > 0"]];
+        if ([filtered count]) {
+            [args addObjectsFromArray:filtered];
+        }
+    }
+
+    [taskObject setArguments:args];
+    [taskObject setLaunchPath:@"/usr/bin/ssh"];
+
+    return taskObject;
 }
 
 
-/*	
- *	Opens SSH connection, asking the user for password and storing it in the keychain upon request.
- *	Calls a given callback function on each notable event.
+/*
+ *  Opens SSH connection and monitors stderr in-process for connection state.
+ *  Calls callback selectors on notable events.
  *
- *	argument: callback object to be called upon notable event
- *	argument: callback selector on object to be called upon opening connection
- *	argument: callback selector on object to be called upon successful connection
- *	argument: callback selector on object to be called upon failed connection
- *	argument: username for server
- *	argument: hostname for server
- *	argument: remoteport for server
- *	argument: localbindport for socks proxy
- *	argument: additional arguments for ssh task
- *	argument: compression argument for ssh task
- *	return: true on success
- *	return: false if task path not found
+ *  return: YES on successful launch
+ *  return: NO if SSHAskPass helper not found
  */
-
 - (BOOL)openSSHConnectionAndNotifyObject:(id)object
-					 withOpeningSelector:(SEL)openingSelector
-					 withSuccessSelector:(SEL)successSelector
-					 withFailureSelector:(SEL)failureSelector
-							withUsername:(NSString *)username
-							withHostname:(NSString *)hostname
-						  withRemotePort:(NSString *)remoteport
-					   withLocalBindPort:(NSNumber *)localPort
-				 withAdditionalArguments:(NSString *)additionalArgs
+                     withOpeningSelector:(SEL)openingSelector
+                     withSuccessSelector:(SEL)successSelector
+                     withFailureSelector:(SEL)failureSelector
+                            withUsername:(NSString *)username
+                            withHostname:(NSString *)hostname
+                          withRemotePort:(NSString *)remoteport
+                       withLocalBindPort:(NSNumber *)localPort
+                 withAdditionalArguments:(NSString *)additionalArgs
                       withSSHCompression:(BOOL)sshCompression {
-	
-	XLog(self, @"Opening SSH connection");
-	XLog(self, @"User: %@",username);
-	XLog(self, @"Host: %@",hostname);
-	
-	NSTask *taskObject = [self sshTaskWithUsername:username
-									  withHostname:hostname
-									withRemotePort:remoteport
-								 withLocalBindPort:localPort
-						   withAdditionalArguments:additionalArgs
-								withSSHCompression:sshCompression];
-	
-	// Setup the pipes on the task
-	NSPipe *outputPipe = [NSPipe pipe];
-	NSPipe *errorPipe = [NSPipe pipe];
-	
-	[taskObject setStandardOutput:outputPipe];
-	[taskObject setStandardInput:[NSFileHandle fileHandleWithNullDevice]];	// It's important that the standard input is set to null here. 
-																			// This is sometimes required in order to get SSH to use the
-																			// Askpass program rather then prompt the user interactively.
-	[taskObject setStandardError:errorPipe];
-	
-	// Get the path of the Askpass program, which is included as part of the main application bundle
-	NSString *askPassPath = [[NSBundle mainBundle] pathForAuxiliaryExecutable:@"SSHAskPass"];
-	
-	XLog(self, @"AskPass path: %@",askPassPath);
-	
-	if (askPassPath == nil) {
-		return FALSE;
-	}
-	
-	// Set up environment variables for the task
-	NSDictionary *currentEnvironment = [[NSProcessInfo processInfo] environment];
-	NSMutableDictionary *newEnvironment =	[NSMutableDictionary dictionaryWithObjectsAndKeys:
-											 @"NONE", @"DISPLAY", // It's important that Display is set so that ssh will use Askpass. The actual value is not important though 
-											 askPassPath, @"SSH_ASKPASS",
-											 username,@"AUTH_USERNAME",
-											 hostname,@"AUTH_HOSTNAME",
-											 nil];
-	[newEnvironment setObject:[currentEnvironment objectForKey:@"SSH_AUTH_SOCK"] forKey:@"SSH_AUTH_SOCK"]; // Environment variable needed for key based authentication	
-	
-	NSLog(@"Environment: %@",newEnvironment);
-	
-	// Set the task's environment
-	[taskObject setEnvironment:newEnvironment];
-	
-	// Delete previous connection's log file
-	[[NSFileManager defaultManager]
-	 removeItemAtPath:SSHLogPath
-	 error:nil];
-	
-	// Create log file for ssh command to output to
-	[[NSFileManager defaultManager]
-     createFileAtPath:SSHLogPath
-     contents:nil
-     attributes:nil];
-	
-	// Set error output of ssh command to the log file
-	NSFileHandle *logHandle = [NSFileHandle fileHandleForWritingAtPath:SSHLogPath];
-	[taskObject setStandardError:logHandle];
-	
-	NSString *command = [NSString stringWithFormat:@"%@ %@", [taskObject launchPath], [[taskObject arguments] componentsJoinedByString:@" "]];
-	XLog(self, @"Command: %@", command);
-	
-	// Launch task
-	[taskObject launch];
-	
-	// Notify opening callback selector on object
-	[object performSelector:openingSelector withObject:taskObject];
-	
-	// Watch the connection for changes - To do: this needs to happen before the task is launched
-	if (![self watchSSHConnectionAndOnOpenOrErrorNotifyObject:object
-										 withSuccessSelector:successSelector
-										 withFailureSelector:failureSelector
-											  withConnection:taskObject]) {
-		return FALSE;
-	}
-	
-	return TRUE;
-	
+
+    os_log(SidestepLogSSH(), "Opening SSH connection to %{private}@@%{private}@",
+           username, hostname);
+
+    NSTask *taskObject = [self sshTaskWithUsername:username
+                                      withHostname:hostname
+                                    withRemotePort:remoteport
+                                 withLocalBindPort:localPort
+                           withAdditionalArguments:additionalArgs
+                                withSSHCompression:sshCompression];
+
+    // Pipe stdout (unused by ssh -N but required) and stderr (connection events)
+    NSPipe *outputPipe = [NSPipe pipe];
+    NSPipe *errorPipe  = [NSPipe pipe];
+
+    [taskObject setStandardOutput:outputPipe];
+    // stdin must be null so that ssh uses SSH_ASKPASS rather than prompting interactively
+    [taskObject setStandardInput:[NSFileHandle fileHandleWithNullDevice]];
+    [taskObject setStandardError:errorPipe];
+
+    NSString *askPassPath = [[NSBundle mainBundle] pathForAuxiliaryExecutable:@"SSHAskPass"];
+    os_log_debug(SidestepLogSSH(), "SSHAskPass path: %{private}@", askPassPath);
+
+    if (askPassPath == nil) {
+        os_log_error(SidestepLogSSH(), "SSHAskPass helper not found in bundle");
+        return NO;
+    }
+
+    // Build a minimal environment: suppress inherited state, set what ssh needs
+    NSDictionary *currentEnvironment = [[NSProcessInfo processInfo] environment];
+    NSMutableDictionary *newEnvironment = [@{
+        // DISPLAY=NONE forces ssh to use SSH_ASKPASS instead of a terminal prompt
+        @"DISPLAY":       @"NONE",
+        @"SSH_ASKPASS":   askPassPath,
+        @"AUTH_USERNAME": username,
+        @"AUTH_HOSTNAME": hostname,
+    } mutableCopy];
+
+    // Preserve SSH agent socket for key-based auth if an agent is running
+    NSString *authSock = currentEnvironment[@"SSH_AUTH_SOCK"];
+    if (authSock) {
+        newEnvironment[@"SSH_AUTH_SOCK"] = authSock;
+    }
+
+    os_log_debug(SidestepLogSSH(), "SSH environment configured for user %{private}@ on %{private}@",
+                 username, hostname);
+
+    [taskObject setEnvironment:newEnvironment];
+
+    // Launch SSH
+    [taskObject launch];
+
+    // Notify "opening" callback
+    [object performSelector:openingSelector withObject:taskObject];
+
+    // Begin async monitoring of SSH stderr for connection outcome
+    [self watchSSHConnectionAndOnOpenOrErrorNotifyObject:object
+                                     withSuccessSelector:successSelector
+                                     withFailureSelector:failureSelector
+                                          withConnection:taskObject];
+
+    return YES;
 }
 
-/*	
- *	Watches given SSH connection's log file for changes.
- *	Calls a given callback function on each notable event.
+
+/*
+ *  Monitors SSH stderr asynchronously via readabilityHandler.
+ *  Scans each line for keywords indicating success or failure.
+ *  Arms a 35-second watchdog in case SSH hangs without producing expected output.
  *
- *	argument: callback object to be called upon notable event
- *	argument: callback selector on object to be called upon successful connection
- *	argument: callback selector on object to be called upon failed connection
- *	argument: connection's task that is being watched
- *	return: true on success
- *	return: false if task path not found
+ *  Result codes (unchanged from previous shell-script protocol):
+ *    1 — Connection successful
+ *    2 — Authentication error
+ *    3 — Server not found
+ *    4 — Connection timed out
+ *    5 — Manually terminated
+ *    6 — Watchdog timeout (no result within 35 s)
  */
+- (void)watchSSHConnectionAndOnOpenOrErrorNotifyObject:(id)object
+                                   withSuccessSelector:(SEL)successSelector
+                                   withFailureSelector:(SEL)failureSelector
+                                        withConnection:(NSTask *)connection {
 
-- (BOOL)watchSSHConnectionAndOnOpenOrErrorNotifyObject:(id)object
-								   withSuccessSelector:(SEL)successSelector
-								   withFailureSelector:(SEL)failureSelector
-										withConnection:(NSTask *)connection {
+    os_log_debug(SidestepLogSSH(), "Watching SSH stderr for connection outcome");
 
-	XLog(self, @"Watching SSH connection for open or error");
-	
-	NSTask *task = [[NSTask alloc] init];
+    // Reset per-connection state
+    _terminating  = NO;
+    _resultToken  = 0;
+    _stderrBuffer = [NSMutableData new];
 
-	// Setup the pipes on the task
-	NSPipe *outputPipe = [NSPipe pipe];
-	NSPipe *errorPipe = [NSPipe pipe];
+    NSFileHandle *stderrHandle = [[connection standardError] fileHandleForReading];
 
-	[task setStandardOutput:outputPipe];
-	[task setStandardInput:[NSFileHandle fileHandleWithNullDevice]];
-	[task setStandardError:errorPipe];
+    // Helper block that fires at most once regardless of which path triggers it
+    __block typeof(self) weakSelf = self;
+    void (^sendResult)(NSString *code) = ^(NSString *code) {
+        dispatch_once(&weakSelf->_resultToken, ^{
+            // Cancel the watchdog before calling back so it can't fire afterward
+            if (weakSelf->_watchdogTimer) {
+                dispatch_source_cancel(weakSelf->_watchdogTimer);
+                weakSelf->_watchdogTimer = nil;
+            }
+            stderrHandle.readabilityHandler = nil;
 
-	// Set up arguments to the task
-	NSMutableArray *args = [NSMutableArray new];
-	[args addObject:SSHLogPath];
-	
-	// Get the path of the task, which is included as part of the main application bundle
-	NSString *taskPath = [NSBundle pathForResource:@"WatchSSHConnectionForChanges"
-											ofType:@"sh"
-									   inDirectory:[[NSBundle mainBundle] bundlePath]];
-	
-	if (taskPath == nil) {
-		return FALSE;
-	}
-	
-	// Set task's arguments and launch path
-	[task setArguments:args];
-	[task setLaunchPath:taskPath];
-	
-	// Before launching the task, get a filehandle for reading its output
-	NSFileHandle *readHandle = [[task standardOutput] fileHandleForReading];
-	
-	// Launch task
-	[task launch];
-	
-	// Read task's output data
-	NSData *readData;
-	while ((readData = [readHandle availableData]) && [readData length]) {
-		NSString *readString = [[NSString alloc] initWithData:readData encoding:NSASCIIStringEncoding];
+            if ([code isEqualToString:@"1"]) {
+                os_log(SidestepLogSSH(), "SSH connection established");
+                [object performSelector:successSelector withObject:connection];
+            } else {
+                os_log(SidestepLogSSH(), "SSH connection failed with code %{public}@", code);
+                [object performSelector:failureSelector withObject:code];
+            }
+        });
+    };
 
-		XLog(self, @"SSH Connection Watcher said: %@", readString);
-		
-		//	Return values of SSH Connection Watcher:
-		//		1 - Connection successful
-		//		2 - Authentication error
-		//		3 - Server not found
-		//		4 - Connection timed out
-		//		5 - Manually terminated connection attempt
+    // Read SSH stderr chunk by chunk, accumulating into lines
+    stderrHandle.readabilityHandler = ^(NSFileHandle *handle) {
+        NSData *data = [handle availableData];
 
-		if ([readString isEqualToString:@"1"]) {								// If connection was successful,
-			[object performSelector:successSelector withObject:connection];		// call the success callback function
-		}
-		else {																	// If connection was not successful,
-			[object performSelector:failureSelector withObject:readString];		// call the failure callback function
-		}
-	}
-	
-	return TRUE;
-	
+        if ([data length] == 0) {
+            // EOF: process exited
+            if (weakSelf->_terminating) {
+                sendResult(@"5");
+            } else {
+                // SSH exited without producing a recognised outcome — treat as timeout/generic failure
+                sendResult(@"6");
+            }
+            return;
+        }
+
+        [weakSelf->_stderrBuffer appendData:data];
+
+        // Extract complete lines from the buffer
+        NSString *buffered = [[NSString alloc] initWithData:weakSelf->_stderrBuffer
+                                                   encoding:NSUTF8StringEncoding];
+        if (!buffered) return;
+
+        NSArray<NSString *> *lines = [buffered componentsSeparatedByString:@"\n"];
+        // Keep the last (possibly incomplete) fragment in the buffer
+        NSUInteger count = [lines count];
+        if (count > 1) {
+            NSString *remainder = lines[count - 1];
+            weakSelf->_stderrBuffer = [[remainder dataUsingEncoding:NSUTF8StringEncoding] mutableCopy]
+                                      ?: [NSMutableData new];
+        }
+
+        for (NSUInteger i = 0; i < count - 1; i++) {
+            NSString *line = lines[i];
+            if (![line length]) continue;
+
+            os_log_debug(SidestepLogSSH(), "ssh: %{private}@", line);
+
+            if ([line rangeOfString:@"Entering interactive session"].location != NSNotFound) {
+                sendResult(@"1");
+            } else if ([line rangeOfString:@"Permission denied ("].location != NSNotFound) {
+                sendResult(@"2");
+            } else if ([line rangeOfString:@"Could not resolve hostname"].location != NSNotFound) {
+                sendResult(@"3");
+            } else if ([line rangeOfString:@"Connection timed out"].location != NSNotFound) {
+                sendResult(@"4");
+            }
+            // code 5 (manual termination) is sent via EOF path above
+        }
+    };
+
+    // Watchdog: if no result arrives within 35 seconds, give up
+    dispatch_queue_t timerQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    _watchdogTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, timerQueue);
+    dispatch_source_set_timer(_watchdogTimer,
+                              dispatch_time(DISPATCH_TIME_NOW, 35 * NSEC_PER_SEC),
+                              DISPATCH_TIME_FOREVER,
+                              1 * NSEC_PER_SEC);
+    dispatch_source_set_event_handler(_watchdogTimer, ^{
+        os_log_error(SidestepLogSSH(), "SSH connection watchdog fired — no outcome in 35 s");
+        [connection terminate];
+        sendResult(@"6");
+    });
+    dispatch_resume(_watchdogTimer);
 }
 
-/*	
- *	Waits for given SSH connection's task to close, and then calls a given callback function.
- *
- *	argument: callback object to be called upon notable event
- *	argument: callback selector on object to be called upon connection close
- *	argument: connection's task that is being watched
- *	return: void
- */
 
+/*
+ *  Waits for SSH connection's task to close, then calls the given selector.
+ */
 - (void)watchSSHConnectionAndOnCloseNotifyObject:(id)object
-									withSelector:(SEL)selector
-								  withConnection:(NSTask *)connection {
-	
-	XLog(self, @"Watching SSH connection for close");
-	
-	// Wait for connection's task to exit
+                                    withSelector:(SEL)selector
+                                  withConnection:(NSTask *)connection {
+
+    os_log_debug(SidestepLogSSH(), "Waiting for SSH task to exit");
     [connection waitUntilExit];
-
-	// Notify close callback selector on object
-	[object performSelector:selector];
-
+    [object performSelector:selector];
 }
 
-/*	
- *	Manually terminates SSH connection attempt by inserting terminate message into the SSH connection log.
- *
- *	return: void
- */
 
+/*
+ *  Signals that the in-progress connection attempt should be aborted.
+ *  Sets _terminating so the readabilityHandler EOF path sends result code 5.
+ */
 - (void)terminateSSHConnectionAttempt {
-	
-	XLog(self, @"Terminating SSH connection attempt");
-	
-	if ([[NSFileManager defaultManager] fileExistsAtPath:SSHLogPath]) {					// If file exists
-		XLog(self, @"Writing terminate command to SSH connection log file");
-		
-		NSFileHandle *logHandle = [NSFileHandle fileHandleForWritingAtPath:SSHLogPath];		// Get log file handle for writing
-		[logHandle seekToEndOfFile];														// Append to file
-		[logHandle writeData:[terminateCommand dataUsingEncoding:NSUTF8StringEncoding]];	// Write terminate command to file
-	}
-		
+
+    os_log(SidestepLogSSH(), "Terminating SSH connection attempt");
+    _terminating = YES;
+
+    // Cancel the watchdog immediately so it doesn't race with the EOF handler
+    if (_watchdogTimer) {
+        dispatch_source_cancel(_watchdogTimer);
+        _watchdogTimer = nil;
+    }
 }
 
-/*	
- *	Kills given SSH connection's task by process ID (PID).
- *
- *	argument: process ID to kill
- *	return: void
- */
 
+/*
+ *  Kills the SSH task identified by PID.
+ */
 - (void)killSSHConnectionForPID:(NSInteger)pid {
 
-	XLog(self, @"Killing connection with PID: %ld", (long)pid);
-
-	kill((pid_t)pid, SIGTERM);
-
+    os_log(SidestepLogSSH(), "Killing SSH connection PID %{public}ld", (long)pid);
+    kill((pid_t)pid, SIGTERM);
 }
 
 @end

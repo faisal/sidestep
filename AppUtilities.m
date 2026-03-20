@@ -8,48 +8,27 @@
 
 
 #include "AppUtilities.h"
-#import "Configurations.h"
 
 @implementation AppUtilities
 
-void _XLog(CFAbsoluteTime *lastTime, NSString *format, va_list argList)
-{
-	CFStringRef log = CFStringCreateWithFormatAndArguments(NULL, NULL, (__bridge CFStringRef)format, argList);
-	char *ptr = (char *)CFStringGetCStringPtr(log, kCFStringEncodingUTF8);
-	if (ptr) 	
-		NSLog(@"%s\n", ptr);
-	else {
-		CFIndex buflen = CFStringGetLength(log) * 4 + 1;
-		ptr = malloc((size_t)buflen);
-		CFStringGetCString(log, ptr, buflen, kCFStringEncodingUTF8);
-		NSLog(@"%s\n", ptr);
-		free(ptr);
-	}
-	CFRelease(log);
-	
-}
-
 void XLog(id object, NSString *format, ...) {
-	format = [NSString stringWithFormat:@"%@ - %@", [object className], format];
-	if (debuggingEnabled) {
-		va_list argList;
-		va_start(argList, format);
-		_XLog(nil, format, argList);
-		va_end(argList);
-	}
+    va_list argList;
+    va_start(argList, format);
+    NSString *message = [[NSString alloc] initWithFormat:format arguments:argList];
+    va_end(argList);
+    // Log at debug level under the general category with the class name as context.
+    // Debug messages are redacted by default in the unified log; use
+    // `log stream --subsystem com.faisal.Sidestep --level debug` to see them.
+    os_log_debug(SidestepLogGeneral(), "%{public}@ - %{public}@", [object className], message);
 }
 
-void XFTimeLog(id object, CFAbsoluteTime *time, NSString *format, ...)
-{
-	format = [NSString stringWithFormat:@"%@ - %@", [object className], format];
-	if (debuggingEnabled) {
-		va_list argList;
-		va_start(argList, format);
-		_XLog(time, format, argList);
-		va_end(argList);
-        
-		if (time) *time = CFAbsoluteTimeGetCurrent();
-	}
+void XFTimeLog(id object, CFAbsoluteTime *time, NSString *format, ...) {
+    va_list argList;
+    va_start(argList, format);
+    NSString *message = [[NSString alloc] initWithFormat:format arguments:argList];
+    va_end(argList);
+    os_log_debug(SidestepLogGeneral(), "%{public}@ - %{public}@", [object className], message);
+    if (time) *time = CFAbsoluteTimeGetCurrent();
 }
 
 - (BOOL)object:(NSObject *)object existsInArray:(NSArray *)array

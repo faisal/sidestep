@@ -31,10 +31,10 @@
 				 withAdditionalArguments:(NSString *)additionalArgs
                       withSSHCompression:(BOOL)sshCompression;
 
-- (BOOL)watchSSHConnectionAndOnOpenOrErrorNotifyObject:(id)object
-								   withSuccessSelector:(SEL)successSelector
-								   withFailureSelector:(SEL)failureSelector
-										withConnection:(NSTask *)connection;
+- (void)watchSSHConnectionAndOnOpenOrErrorNotifyObject:(id)object
+                                   withSuccessSelector:(SEL)successSelector
+                                   withFailureSelector:(SEL)failureSelector
+                                        withConnection:(NSTask *)connection;
 
 - (void)watchSSHConnectionAndOnCloseNotifyObject:(id)object
 									withSelector:(SEL)selector

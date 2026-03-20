@@ -58,11 +58,22 @@
 		return NO;
 	}
 
-	// Get System Preferences reference
+	// Get System Preferences reference.
+	// If the authorization handle has gone stale (e.g. user locked screen), clear it
+	// and re-request so the user gets a fresh prompt rather than a silent failure.
 	SCPreferencesRef prefsRef = SCPreferencesCreateWithAuthorization(NULL, CFSTR("com.faisal.Sidestep"), NULL, auth);
 	if (prefsRef == NULL) {
-		XLog(self, @"Failed to obtain Preferences Ref");
-		return NO;
+		XLog(self, @"Failed to obtain Preferences Ref — retrying with fresh authorization");
+		AuthorizationFree(auth, kAuthorizationFlagDefaults);
+		auth = NULL;
+		if (![self ensureAuthorization]) {
+			return NO;
+		}
+		prefsRef = SCPreferencesCreateWithAuthorization(NULL, CFSTR("com.faisal.Sidestep"), NULL, auth);
+		if (prefsRef == NULL) {
+			XLog(self, @"Failed to obtain Preferences Ref after re-authorization");
+			return NO;
+		}
 	}
 
 	BOOL success = NO;

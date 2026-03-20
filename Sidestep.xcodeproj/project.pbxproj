@@ -34,7 +34,6 @@
 		61B3E4AE127A7BD00011E198 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6145B3B1127A780A00A5F7AF /* Security.framework */; };
 		61B3E4D0127A7D3B0011E198 /* SSHAskPass in CopyFiles */ = {isa = PBXBuildFile; fileRef = 61B3E4B2127A7BE30011E198 /* SSHAskPass */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		61B3E63B127ACB420011E198 /* DefaultsController.m in Sources */ = {isa = PBXBuildFile; fileRef = 61B3E63A127ACB420011E198 /* DefaultsController.m */; };
-		61B3E827127BA7A50011E198 /* WatchSSHConnectionForChanges.sh in Resources */ = {isa = PBXBuildFile; fileRef = 61B3E825127BA7A50011E198 /* WatchSSHConnectionForChanges.sh */; };
 		61FB5F5A1280E970003229D7 /* ProxySetter.m in Sources */ = {isa = PBXBuildFile; fileRef = 61FB5F591280E970003229D7 /* ProxySetter.m */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
@@ -128,7 +127,6 @@
 		61B3E4B2127A7BE30011E198 /* SSHAskPass */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = SSHAskPass; sourceTree = BUILT_PRODUCTS_DIR; };
 		61B3E639127ACB420011E198 /* DefaultsController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DefaultsController.h; sourceTree = "<group>"; };
 		61B3E63A127ACB420011E198 /* DefaultsController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DefaultsController.m; sourceTree = "<group>"; };
-		61B3E825127BA7A50011E198 /* WatchSSHConnectionForChanges.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = WatchSSHConnectionForChanges.sh; path = scripts/WatchSSHConnectionForChanges.sh; sourceTree = SOURCE_ROOT; };
 		61FB5F581280E970003229D7 /* ProxySetter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ProxySetter.h; sourceTree = "<group>"; };
 		61FB5F591280E970003229D7 /* ProxySetter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ProxySetter.m; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Sidestep-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Sidestep-Info.plist"; sourceTree = "<group>"; };
@@ -259,7 +257,6 @@
 				6172BFC2162BA394002FD797 /* direct-insecure-icon@2x.png */,
 				61739FEE1294787E00BBD392 /* direct-secure-icon.png */,
 				6172BFC3162BA394002FD797 /* direct-secure-icon@2x.png */,
-				61B3E825127BA7A50011E198 /* WatchSSHConnectionForChanges.sh */,
 				8D1107310486CEB800E47090 /* Sidestep-Info.plist */,
 				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
 				1DDD58140DA1D0A300B32029 /* Sidestep.xib */,
@@ -360,7 +357,6 @@
 			files = (
 				8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */,
 				1DDD58160DA1D0A300B32029 /* Sidestep.xib in Resources */,
-				61B3E827127BA7A50011E198 /* WatchSSHConnectionForChanges.sh in Resources */,
 				61739FEF1294787E00BBD392 /* direct-secure-icon.png in Resources */,
 				6173A007129511F900BBD392 /* direct-insecure-icon.png in Resources */,
 				616141E6129722600090EE00 /* rerouted-secure-icon.png in Resources */,
