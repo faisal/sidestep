@@ -3,10 +3,11 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 45;
+	objectVersion = 56;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AA00000000000000AA000003 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = AA00000000000000AA000002 /* Sparkle */; };
 		AABB000100000000SM000006 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AABB000100000000SM000005 /* ServiceManagement.framework */; };
 		AABB000100000000UN000006 /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AABB000100000000UN000005 /* UserNotifications.framework */; };
 		AABB000100000000CW000002 /* CoreWLAN.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AABB000100000000CW000001 /* CoreWLAN.framework */; };
@@ -38,8 +39,6 @@
 		61B3E4D0127A7D3B0011E198 /* SSHAskPass in Resources */ = {isa = PBXBuildFile; fileRef = 61B3E4B2127A7BE30011E198 /* SSHAskPass */; };
 		61B3E63B127ACB420011E198 /* DefaultsController.m in Sources */ = {isa = PBXBuildFile; fileRef = 61B3E63A127ACB420011E198 /* DefaultsController.m */; };
 		61B3E827127BA7A50011E198 /* WatchSSHConnectionForChanges.sh in Resources */ = {isa = PBXBuildFile; fileRef = 61B3E825127BA7A50011E198 /* WatchSSHConnectionForChanges.sh */; };
-		61BA522212823CF100BD1D72 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 61BA522112823CF100BD1D72 /* Sparkle.framework */; };
-		61BA523112823D4300BD1D72 /* Sparkle.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 61BA522112823CF100BD1D72 /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		61FB5F5A1280E970003229D7 /* ProxySetter.m in Sources */ = {isa = PBXBuildFile; fileRef = 61FB5F591280E970003229D7 /* ProxySetter.m */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
@@ -58,16 +57,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		61BA523912823D4900BD1D72 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				61BA523112823D4300BD1D72 /* Sparkle.framework in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		AAE84BF0129F7A4D00320F49 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -131,7 +120,6 @@
 		61B3E639127ACB420011E198 /* DefaultsController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DefaultsController.h; sourceTree = "<group>"; };
 		61B3E63A127ACB420011E198 /* DefaultsController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DefaultsController.m; sourceTree = "<group>"; };
 		61B3E825127BA7A50011E198 /* WatchSSHConnectionForChanges.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = WatchSSHConnectionForChanges.sh; path = scripts/WatchSSHConnectionForChanges.sh; sourceTree = SOURCE_ROOT; };
-		61BA522112823CF100BD1D72 /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Sparkle.framework; sourceTree = SOURCE_ROOT; };
 		61FB5F581280E970003229D7 /* ProxySetter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ProxySetter.h; sourceTree = "<group>"; };
 		61FB5F591280E970003229D7 /* ProxySetter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ProxySetter.m; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Sidestep-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Sidestep-Info.plist"; sourceTree = "<group>"; };
@@ -160,7 +148,7 @@
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
 				6145B40E127A7A6700A5F7AF /* SystemConfiguration.framework in Frameworks */,
 				6145B412127A7A6F00A5F7AF /* IOKit.framework in Frameworks */,
-				61BA522212823CF100BD1D72 /* Sparkle.framework in Frameworks */,
+				AA00000000000000AA000003 /* Sparkle in Frameworks */,
 				AABB000100000000SM000006 /* ServiceManagement.framework in Frameworks */,
 				AABB000100000000UN000006 /* UserNotifications.framework in Frameworks */,
 				AABB000100000000CW000002 /* CoreWLAN.framework in Frameworks */,
@@ -205,7 +193,6 @@
 		1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				61BA522112823CF100BD1D72 /* Sparkle.framework */,
 				6145B3B1127A780A00A5F7AF /* Security.framework */,
 				1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */,
 				6145B40D127A7A6700A5F7AF /* SystemConfiguration.framework */,
@@ -311,7 +298,6 @@
 				8D1107290486CEB800E47090 /* Resources */,
 				8D11072C0486CEB800E47090 /* Sources */,
 				8D11072E0486CEB800E47090 /* Frameworks */,
-				61BA523912823D4900BD1D72 /* CopyFiles */,
 				AAE84BF0129F7A4D00320F49 /* CopyFiles */,
 				AAE84BF7129F7A8600320F49 /* CopyFiles */,
 			);
@@ -321,6 +307,9 @@
 				61B3E4B1127A7BE30011E198 /* PBXTargetDependency */,
 			);
 			name = Sidestep;
+			packageProductDependencies = (
+				AA00000000000000AA000002 /* Sparkle */,
+			);
 			productInstallPath = "$(HOME)/Applications";
 			productName = Sidestep;
 			productReference = 8D1107320486CEB800E47090 /* Sidestep.app */;
@@ -334,7 +323,7 @@
 			attributes = {
 			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Sidestep" */;
-			compatibilityVersion = "Xcode 3.1";
+			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (
@@ -344,6 +333,9 @@
 				German,
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* Sidestep */;
+			packageReferences = (
+				AA00000000000000AA000001 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -491,10 +483,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEVELOPMENT_TEAM = Z55A7CATTU;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)\"",
-				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -516,10 +504,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = Z55A7CATTU;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)\"",
-				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Sidestep_Prefix.pch;
 				INFOPLIST_FILE = "Sidestep-Info.plist";
@@ -593,6 +577,26 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		AA00000000000000AA000001 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AA00000000000000AA000002 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA00000000000000AA000001 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
+
 	};
 	rootObject = 29B97313FDCFA39411CA2CEA /* Project object */;
 }
