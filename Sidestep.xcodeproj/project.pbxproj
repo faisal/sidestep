@@ -7,10 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		AA00000000000000AA000003 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = AA00000000000000AA000002 /* Sparkle */; };
-		AABB000100000000SM000006 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AABB000100000000SM000005 /* ServiceManagement.framework */; };
-		AABB000100000000UN000006 /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AABB000100000000UN000005 /* UserNotifications.framework */; };
-		AABB000100000000CW000002 /* CoreWLAN.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AABB000100000000CW000001 /* CoreWLAN.framework */; };
 		1DDD58160DA1D0A300B32029 /* Sidestep.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DDD58140DA1D0A300B32029 /* Sidestep.xib */; };
 		256AC3DA0F4B6AC300CF3369 /* AppController.m in Sources */ = {isa = PBXBuildFile; fileRef = 256AC3D90F4B6AC300CF3369 /* AppController.m */; };
 		613F9D2A12AD8D4300B13A60 /* VPNInterfacer.m in Sources */ = {isa = PBXBuildFile; fileRef = 613F9D2912AD8D4300B13A60 /* VPNInterfacer.m */; };
@@ -36,13 +32,17 @@
 		61B3E46B127A7BC20011E198 /* PasswordController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6145B339127A764E00A5F7AF /* PasswordController.m */; };
 		61B3E46C127A7BC20011E198 /* SSHAskPass.m in Sources */ = {isa = PBXBuildFile; fileRef = 6145B3BF127A78AD00A5F7AF /* SSHAskPass.m */; };
 		61B3E4AE127A7BD00011E198 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6145B3B1127A780A00A5F7AF /* Security.framework */; };
-		61B3E4D0127A7D3B0011E198 /* SSHAskPass in Resources */ = {isa = PBXBuildFile; fileRef = 61B3E4B2127A7BE30011E198 /* SSHAskPass */; };
+		61B3E4D0127A7D3B0011E198 /* SSHAskPass in CopyFiles */ = {isa = PBXBuildFile; fileRef = 61B3E4B2127A7BE30011E198 /* SSHAskPass */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		61B3E63B127ACB420011E198 /* DefaultsController.m in Sources */ = {isa = PBXBuildFile; fileRef = 61B3E63A127ACB420011E198 /* DefaultsController.m */; };
 		61B3E827127BA7A50011E198 /* WatchSSHConnectionForChanges.sh in Resources */ = {isa = PBXBuildFile; fileRef = 61B3E825127BA7A50011E198 /* WatchSSHConnectionForChanges.sh */; };
 		61FB5F5A1280E970003229D7 /* ProxySetter.m in Sources */ = {isa = PBXBuildFile; fileRef = 61FB5F591280E970003229D7 /* ProxySetter.m */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		AA00000000000000AA000003 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = AA00000000000000AA000002 /* Sparkle */; };
+		AABB000100000000CW000002 /* CoreWLAN.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AABB000100000000CW000001 /* CoreWLAN.framework */; };
+		AABB000100000000SM000006 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AABB000100000000SM000005 /* ServiceManagement.framework */; };
+		AABB000100000000UN000006 /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AABB000100000000UN000005 /* UserNotifications.framework */; };
 		AAE84BF6129F7A8600320F49 /* GrowlMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = AAE84BF5129F7A8600320F49 /* GrowlMessage.m */; };
 /* End PBXBuildFile section */
 
@@ -57,6 +57,16 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		AA00000000000000AA000010 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				61B3E4D0127A7D3B0011E198 /* SSHAskPass in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AAE84BF0129F7A4D00320F49 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -72,16 +82,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		AA00000000000000AA000010 /* CopyFiles (MacOS) */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 6;
-			files = (
-				61B3E4D0127A7D3B0011E198 /* SSHAskPass in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -134,9 +134,9 @@
 		61FB5F591280E970003229D7 /* ProxySetter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ProxySetter.m; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Sidestep-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Sidestep-Info.plist"; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Sidestep.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sidestep.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AABB000100000000CW000001 /* CoreWLAN.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreWLAN.framework; path = System/Library/Frameworks/CoreWLAN.framework; sourceTree = SDKROOT; };
 		AABB000100000000SM000005 /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = System/Library/Frameworks/ServiceManagement.framework; sourceTree = SDKROOT; };
 		AABB000100000000UN000005 /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
-		AABB000100000000CW000001 /* CoreWLAN.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreWLAN.framework; path = System/Library/Frameworks/CoreWLAN.framework; sourceTree = SDKROOT; };
 		AAE84BF4129F7A8600320F49 /* GrowlMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GrowlMessage.h; sourceTree = "<group>"; };
 		AAE84BF5129F7A8600320F49 /* GrowlMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GrowlMessage.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -310,7 +310,7 @@
 				8D11072E0486CEB800E47090 /* Frameworks */,
 				AAE84BF0129F7A4D00320F49 /* CopyFiles */,
 				AAE84BF7129F7A8600320F49 /* CopyFiles */,
-				AA00000000000000AA000010 /* CopyFiles (MacOS) */,
+				AA00000000000000AA000010 /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -332,6 +332,8 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2630;
 			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Sidestep" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -445,7 +447,8 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				DEVELOPMENT_TEAM = Z55A7CATTU;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -469,8 +472,9 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = Z55A7CATTU;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Sidestep_Prefix.pch;
 				INSTALL_PATH = /usr/local/bin;
@@ -492,7 +496,8 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				DEVELOPMENT_TEAM = Z55A7CATTU;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -512,8 +517,9 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = Z55A7CATTU;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Sidestep_Prefix.pch;
 				INFOPLIST_FILE = "Sidestep-Info.plist";
@@ -529,15 +535,45 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = Z55A7CATTU;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				ONLY_ACTIVE_ARCH = NO;
+				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 			};
 			name = Debug;
 		};
@@ -545,14 +581,43 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = Z55A7CATTU;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				ONLY_ACTIVE_ARCH = NO;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 			};
 			name = Release;
 		};
@@ -606,7 +671,6 @@
 			productName = Sparkle;
 		};
 /* End XCSwiftPackageProductDependency section */
-
 	};
 	rootObject = 29B97313FDCFA39411CA2CEA /* Project object */;
 }
