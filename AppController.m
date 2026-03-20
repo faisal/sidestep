@@ -60,7 +60,7 @@ NSString *determiningConnectionStatusText          = @"Determining connection st
 NSString *connectingConnectionStatusText           = @"Connecting...";
 NSString *retryingConnectionStatusText             = @"Reconnecting...";
 NSString *proxyConnectedConnectionStatusText       = @"Secure connection";
-NSString *protectedConnectionStatusText            = @"Secure network";
+NSString *protectedConnectionStatusText            = @"On secure WiFi";
 NSString *openConnectionStatusText                 = @"Unsecure network";
 
 NSString *notConnectedServerStatusText             = @"Not connected";
