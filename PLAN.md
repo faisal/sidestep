@@ -139,17 +139,18 @@ Sidestep is a ~2010-era macOS menu bar app (~3,780 LOC, 14 .m files) that detect
 
 ## Phase 4: Replace Growl with UserNotifications ✓
 
-**Files**: `GrowlMessage.m`, `GrowlMessage.h`, `AppController.m`
+**Files**: `AppController.h`, `AppController.m`
 
-### 4.1 GrowlMessage rewritten with UNUserNotificationCenter
-- `#import <UserNotifications/UserNotifications.h>`
-- `requestAuthorization` requests `UNAuthorizationOptionAlert | UNAuthorizationOptionSound`
-- `message:` creates `UNMutableNotificationContent` with title "Sidestep", posts via `UNNotificationRequest`
-- Implements `UNUserNotificationCenterDelegate` (`userNotificationCenter:willPresentNotification:withCompletionHandler:`) for banner presentation while app is frontmost
-- Checks `sidestep_GrowlSetting` user default before posting
+### 4.1 GrowlMessage wrapper removed
+- `GrowlMessage.h` and `GrowlMessage.m` deleted; `AppController` now owns notification delivery directly
+- `AppController` conforms to `UNUserNotificationCenterDelegate`
+- Private `-postNotification:(NSString *)message` method handles the `sidestep_GrowlSetting` check, creates `UNMutableNotificationContent` (title: "Sidestep", body: message), and posts via `UNNotificationRequest`
+- `userNotificationCenter:willPresentNotification:withCompletionHandler:` returns `UNNotificationPresentationOptionBanner | UNNotificationPresentationOptionSound` for foreground display
+- All `[growl message:]` call sites replaced with `[self postNotification:]`
 
-### 4.2 AppController updated
-- Calls `[growl requestAuthorization]` in `applicationDidFinishLaunching:`
+### 4.2 AppController setup
+- Sets `UNUserNotificationCenter.currentNotificationCenter.delegate = self` in `init`
+- Calls `requestAuthorizationWithOptions:UNAuthorizationOptionAlert|UNAuthorizationOptionSound` in `applicationDidFinishLaunching:`
 - Removed `[GrowlApplicationBridge setGrowlDelegate:]` and `registrationDictionaryForGrowl`
 - `UserNotifications.framework` added to linked frameworks in `project.pbxproj`
 
@@ -318,7 +319,7 @@ Phase 1 (Build System)
 
 4. **End-to-end test on insecure network** — Phases 5 and 6 have not been tested on an open/insecure Wi-Fi network. Specifically verify: (a) security type correctly detected as "none", (b) tunnel auto-connects on join, (c) sleep disconnects and wake reconnects, (d) unexpected tunnel drop triggers auto-reconnect with notification, (e) switching to a secure network tears the tunnel down.
 
-5. **Slow proxy cutover (open, see item 3)** — Same root cause as item 3. Two mitigations tried and reverted: `SCNetworkInterfaceForceConfigurationRefresh` and a longer notification message. Investigate the notification pipeline (GrowlMessage body vs. title rendering) before retrying the UX approach.
+5. **Slow proxy cutover (open, see item 3)** — Same root cause as item 3. Two mitigations tried and reverted: `SCNetworkInterfaceForceConfigurationRefresh` and a longer `content.body` string. Note: notifications display `content.title` ("Sidestep") prominently and `content.body` in smaller text below — a per-message title may be more noticeable than body text changes.
 
 6. **Sparkle as Swift Package ✓** — Completed: `project.pbxproj` updated to `objectVersion = 56`, `Sparkle.framework/` removed from repo, `XCRemoteSwiftPackageReference` at `https://github.com/sparkle-project/Sparkle` (`upToNextMajorVersion 2.0.0`).
 
@@ -326,4 +327,6 @@ Phase 1 (Build System)
 
 8. **`SCNetworkInterfaceForceConfigurationRefresh` on proxy connect** — Tried: called after `SCPreferencesApplyChanges` via `SCNetworkServiceGetInterface`. Had no observable effect; reverted. The underlying issue (items 3 & 5) remains open.
 
-9. **Fix update check reminders warning** — Investigate and fix the issue causing this warning at runtime: "Warning: Background app automatically schedules for update checks but does not implement gentle reminders. As a result, users may not take notice to update alerts that show up in the background. Please visit https://sparkle-project.org/documentation/gentle-reminders for more information. This warning will only be logged once."
+9. **Remove GrowlMessage wrapper ✓** — `GrowlMessage.h`/`.m` deleted; `AppController` conforms to `UNUserNotificationCenterDelegate` directly and posts via private `-postNotification:`. File references removed from `project.pbxproj`.
+
+10. **Fix update check reminders warning** — Investigate and fix the issue causing this warning at runtime: "Warning: Background app automatically schedules for update checks but does not implement gentle reminders. As a result, users may not take notice to update alerts that show up in the background. Please visit https://sparkle-project.org/documentation/gentle-reminders for more information. This warning will only be logged once."
