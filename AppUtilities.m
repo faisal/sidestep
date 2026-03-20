@@ -21,7 +21,7 @@ void _XLog(CFAbsoluteTime *lastTime, NSString *format, va_list argList)
 	else {
 		CFIndex buflen = CFStringGetLength(log) * 4 + 1;
 		ptr = malloc((size_t)buflen);
-		if (CFStringGetCString(log, ptr, buflen, kCFStringEncodingUTF8));
+		CFStringGetCString(log, ptr, buflen, kCFStringEncodingUTF8);
 		NSLog(@"%s\n", ptr);
 		free(ptr);
 	}

@@ -114,7 +114,7 @@ NSInteger GrowlSpam_TestConnection    = 0;
         updaterController = [[SPUStandardUpdaterController alloc]
                              initWithStartingUpdater:NO
                              updaterDelegate:nil
-                             userDriverDelegate:nil];
+                             userDriverDelegate:self];
 
         initiatedDelayedConnectionAttempt = NO;
         retryCounter = 0;
@@ -753,8 +753,8 @@ NSInteger GrowlSpam_TestConnection    = 0;
     XLog(self, @"System woke from sleep — waiting 5 seconds for network");
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-        [networkNotifier getNetworkSecurityTypeAndNotifyObject:self
-                                                 withSelector:@selector(connectedToAirportNetworkWithSecurityType:)];
+        [self->networkNotifier getNetworkSecurityTypeAndNotifyObject:self
+                                                       withSelector:@selector(connectedToAirportNetworkWithSecurityType:)];
     });
 }
 
@@ -1140,6 +1140,18 @@ NSInteger GrowlSpam_TestConnection    = 0;
        willPresentNotification:(UNNotification *)notification
          withCompletionHandler:(void (^)(UNNotificationPresentationOptions))completionHandler {
     completionHandler(UNNotificationPresentationOptionBanner | UNNotificationPresentationOptionSound);
+}
+
+- (BOOL)supportsGentleScheduledUpdateReminders {
+    return YES;
+}
+
+- (void)standardUserDriverWillHandleShowingUpdate:(BOOL)handleShowingUpdate
+                                        forUpdate:(SUAppcastItem *)update
+                                            state:(SPUUserUpdateState *)state {
+    if (!state.userInitiated) {
+        [self postNotification:@"A Sidestep update is available."];
+    }
 }
 
 @end

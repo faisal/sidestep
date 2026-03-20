@@ -11,6 +11,6 @@
 @interface VPNInterfacer : NSObject
 
 - (NSArray *)getListOfVPNServices;
-- (BOOL)turnVPNOnOrOff:(NSString *)serviceName withState:(BOOL)state;
+- (int)turnVPNOnOrOff:(NSString *)serviceName withState:(BOOL)state;
 
 @end

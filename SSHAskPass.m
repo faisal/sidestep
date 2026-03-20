@@ -18,7 +18,7 @@
 
  */
 
-int main() {
+int main(void) {
 	@autoreleasepool {
 
 	// Required for NSAlert to work in a standalone tool spawned by ssh

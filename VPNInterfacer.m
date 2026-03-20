@@ -71,7 +71,7 @@
  *	return: 2 = no such service
  *	return: 3 = service found was not of type VPN
  */
-- (BOOL)turnVPNOnOrOff:(NSString *)serviceName withState:(BOOL)state {
+- (int)turnVPNOnOrOff:(NSString *)serviceName withState:(BOOL)state {
 
 	XLog(self, @"Turning VPN %@ with service name: %@", state ? @"on" : @"off", serviceName);
 

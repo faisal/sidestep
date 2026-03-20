@@ -9,6 +9,7 @@
 #import <Cocoa/Cocoa.h>
 #import <Sparkle/SPUStandardUpdaterController.h>
 #import <Sparkle/SPUUpdater.h>
+#import <Sparkle/SPUStandardUserDriverDelegate.h>
 #import "SSHConnector.h"
 #import "DefaultsController.h"
 #import "LoginItemController.h"
@@ -19,7 +20,7 @@
 #import "AppUtilities.h"
 #import <UserNotifications/UserNotifications.h>
 
-@interface AppController : NSObject <NSTextFieldDelegate, UNUserNotificationCenterDelegate>
+@interface AppController : NSObject <NSTextFieldDelegate, UNUserNotificationCenterDelegate, SPUStandardUserDriverDelegate>
 
 // Top-level nib objects (strong — not retained by a parent view)
 @property (strong, nonatomic) IBOutlet NSMenu *statusMenu;
