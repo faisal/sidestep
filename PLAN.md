@@ -6,7 +6,7 @@ Sidestep is a ~2010-era macOS menu bar app (~3,780 LOC, 14 .m files) that detect
 
 ---
 
-## Phase 1: Build System — Get It Compiling
+## Phase 1: Build System — Get It Compiling ✓
 
 **Files**: `Sidestep.xcodeproj/project.pbxproj`, `GrowlMessage.m`, `Sidestep-Info.plist`
 
@@ -61,7 +61,7 @@ Sidestep is a ~2010-era macOS menu bar app (~3,780 LOC, 14 .m files) that detect
 
 ---
 
-## Phase 2: Replace Deprecated APIs
+## Phase 2: Replace Deprecated APIs ✓
 
 **Files**: `AppController.m`, `LoginItemController.m`, `EMKeychainItem.m`, `PasswordController.m`, `ProxySetter.m`, `SSHAskPass.m`
 
@@ -110,7 +110,7 @@ Sidestep is a ~2010-era macOS menu bar app (~3,780 LOC, 14 .m files) that detect
 
 ---
 
-## Phase 3: ARC Conversion
+## Phase 3: ARC Conversion ✓
 
 **Files**: All `.m` and `.h` files
 
@@ -137,7 +137,7 @@ Sidestep is a ~2010-era macOS menu bar app (~3,780 LOC, 14 .m files) that detect
 
 ---
 
-## Phase 4: Replace Growl with UserNotifications
+## Phase 4: Replace Growl with UserNotifications ✓
 
 **Files**: `GrowlMessage.m`, `GrowlMessage.h`, `AppController.m`
 
@@ -155,7 +155,7 @@ Sidestep is a ~2010-era macOS menu bar app (~3,780 LOC, 14 .m files) that detect
 
 ---
 
-## Phase 5: Network Detection Modernization
+## Phase 5: Network Detection Modernization ✓
 
 **Files**: `NetworkNotifier.m`, `NetworkNotifier.h`, `AppController.m`, `VPNInterfacer.m`, `VPNInterfacer.h`
 
@@ -189,7 +189,7 @@ Sidestep is a ~2010-era macOS menu bar app (~3,780 LOC, 14 .m files) that detect
 
 ---
 
-## Phase 6: Sleep/Wake and Reconnection
+## Phase 6: Sleep/Wake and Reconnection ✓
 
 **Files**: `AppController.m`
 
@@ -219,7 +219,7 @@ Sidestep is a ~2010-era macOS menu bar app (~3,780 LOC, 14 .m files) that detect
 
 ---
 
-## Phase 7: Threading, Modern Syntax, and Polish
+## Phase 7: Threading, Modern Syntax, and Polish ✓
 
 **Files**: All `.m` and `.h` files
 
@@ -314,16 +314,16 @@ Phase 1 (Build System)
 
 2. **VPN validation** — No VPN services available in current test environment. Validate VPN detection (`getListOfVPNServices`) and control (`turnVPNOnOrOff`) with a real VPN configuration before shipping.
 
-3. **iCloud Private Relay interaction (Phase 7 polish)** — On macOS 12+ with Private Relay enabled, Safari routes HTTPS via Apple/Cloudflare relays and ignores system SOCKS proxy settings. macOS automatically pauses Private Relay when a SOCKS proxy is set, but existing Safari connections (already established via relay) do not re-route — only new connections use the tunnel. This is a macOS-level behaviour change, not a Sidestep bug. Mitigations to explore: (a) surface a menu item or notification banner saying "Tunnel connected — reopen Safari tabs to route through proxy", (b) investigate whether posting a `kSCPrefChangesCurrent`/`kSCPrefChangesCommitted` CFNotification more aggressively causes Safari to drop relay sessions sooner.
+3. **iCloud Private Relay / proxy cutover (open)** — On macOS 12+ with Private Relay enabled, Safari routes HTTPS via Apple/Cloudflare relays and ignores system SOCKS proxy settings. macOS automatically pauses Private Relay when a SOCKS proxy is set, but existing connections do not re-route — only new connections use the tunnel. This is a macOS-level behaviour, not a Sidestep bug. Approaches tried and reverted: (a) `SCNetworkInterfaceForceConfigurationRefresh` after apply — no effect; (b) longer notification text prompting user to restart clients — notification text did not appear to change. Further investigation needed.
 
 4. **End-to-end test on insecure network** — Phases 5 and 6 have not been tested on an open/insecure Wi-Fi network. Specifically verify: (a) security type correctly detected as "none", (b) tunnel auto-connects on join, (c) sleep disconnects and wake reconnects, (d) unexpected tunnel drop triggers auto-reconnect with notification, (e) switching to a secure network tears the tunnel down.
 
-5. **Slow proxy cutover (requires restarting Safari)** — Investigate why proxy changes don't take effect for existing browser sessions. Related to item 3 above: explore whether more aggressive `kSCPrefChangesCurrent`/`kSCPrefChangesCommitted` CFNotifications force Safari to drop existing connections and re-route through the proxy sooner, or whether a UX prompt ("Tunnel connected — reopen Safari tabs to route through proxy") is the right mitigation.
+5. **Slow proxy cutover (open, see item 3)** — Same root cause as item 3. Two mitigations tried and reverted: `SCNetworkInterfaceForceConfigurationRefresh` and a longer notification message. Investigate the notification pipeline (GrowlMessage body vs. title rendering) before retrying the UX approach.
 
-6. **Sparkle as Swift Package (done)** — Convert from the downloaded Sparkle binary (`Sparkle.framework/`) to using Sparkle as a Swift Package Manager dependency (`XCRemoteSwiftPackageReference` at `https://github.com/sparkle-project/Sparkle`, `upToNextMajorVersion 2.0.0`). Completed: `project.pbxproj` updated to `objectVersion = 56`, `Sparkle.framework/` removed from repo.
+6. **Sparkle as Swift Package ✓** — Completed: `project.pbxproj` updated to `objectVersion = 56`, `Sparkle.framework/` removed from repo, `XCRemoteSwiftPackageReference` at `https://github.com/sparkle-project/Sparkle` (`upToNextMajorVersion 2.0.0`).
 
-7. **Move SSHAskPass to `Contents/MacOS/`** — The SSHAskPass helper executable is currently installed in `Contents/Resources/` (looked up via `pathForResource:ofType:inDirectory:`). Auxiliary executables should live in `Contents/MacOS/` and be found with `[[NSBundle mainBundle] pathForAuxiliaryExecutable:@"SSHAskPass"]`. Move the SSHAskPass target's installation path in `project.pbxproj` and update `SSHConnector.m`.
+7. **Move SSHAskPass to `Contents/MacOS/` ✓** — Completed: new `PBXCopyFilesBuildPhase` (`dstSubfolderSpec = 6`) copies SSHAskPass to `Contents/MacOS/`; `SSHConnector.m` updated to use `[[NSBundle mainBundle] pathForAuxiliaryExecutable:@"SSHAskPass"]`.
 
-8. **`SCNetworkInterfaceForceConfigurationRefresh` on proxy connect** — On proxy connection, call `SCNetworkInterfaceForceConfigurationRefresh` to nudge the system into applying the new proxy settings immediately. This may reduce the delay before new connections use the tunnel and is a lower-effort mitigation than a UX banner (see item 5).
+8. **`SCNetworkInterfaceForceConfigurationRefresh` on proxy connect** — Tried: called after `SCPreferencesApplyChanges` via `SCNetworkServiceGetInterface`. Had no observable effect; reverted. The underlying issue (items 3 & 5) remains open.
 
 9. **Fix update check reminders warning** — Investigate and fix the issue causing this warning at runtime: "Warning: Background app automatically schedules for update checks but does not implement gentle reminders. As a result, users may not take notice to update alerts that show up in the background. Please visit https://sparkle-project.org/documentation/gentle-reminders for more information. This warning will only be logged once."
