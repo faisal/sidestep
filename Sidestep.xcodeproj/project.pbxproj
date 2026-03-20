@@ -189,7 +189,7 @@
 				61B3E63A127ACB420011E198 /* DefaultsController.m */,
 				61FB5F581280E970003229D7 /* ProxySetter.h */,
 				61FB5F591280E970003229D7 /* ProxySetter.m */,
-					613F9D2812AD8D4300B13A60 /* VPNInterfacer.h */,
+				613F9D2812AD8D4300B13A60 /* VPNInterfacer.h */,
 				613F9D2912AD8D4300B13A60 /* VPNInterfacer.m */,
 			);
 			name = Classes;

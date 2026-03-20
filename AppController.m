@@ -274,35 +274,36 @@ NSInteger GrowlSpam_TestConnection    = 0;
 
     XLog(self, @"User clicked Quit");
 
-    if (SSHConnecting || SSHConnected) {
-        [NSApp activateIgnoringOtherApps:YES];
-
-        NSAlert *alert = [[NSAlert alloc] init];
-        alert.alertStyle     = NSAlertStyleCritical;
-        alert.messageText    = @"Do you want to disconnect before you quit?";
-        alert.informativeText = @"If you quit without disconnecting, your internet "
-                                 "will continue to be routed through the proxy.";
-        [alert addButtonWithTitle:@"Yes"];
-        [alert addButtonWithTitle:@"No"];
-        NSModalResponse decision = [alert runModal];
-
-        if (decision == NSAlertFirstButtonReturn) {
-            XLog(self, @"Turning proxy off");
-            [self turnWirelessProxyOffThread];
-
-            if (SSHConnection) {
-                XLog(self, @"Killing current SSH connection");
-                [SSHConnection terminate];
-            }
-
-            XLog(self, @"Terminating current SSH connection attempt");
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                [self terminateSSHConnectionAttemptThread];
-            });
-        }
+    if (!SSHConnecting && !SSHConnected && !VPNConnected) {
+        return NSTerminateNow;
     }
 
-    return NSTerminateNow;
+    // Kill the SSH process immediately
+    if (SSHConnection) {
+        XLog(self, @"Killing SSH connection on quit");
+        [SSHConnection terminate];
+    }
+    if (SSHConnecting) {
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            [self terminateSSHConnectionAttemptThread];
+        });
+    }
+
+    // Turn off proxy and VPN on a background thread, then notify and quit.
+    // Skip error dialogs — we're exiting regardless.
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        [self->proxySetter toggleProxy:NO interface:@"Wi-Fi" port:0];
+        if (self->VPNConnected) {
+            [self->vpnInterfacer turnVPNOnOrOff:[self->defaultsController selectedVPNService]
+                                      withState:NO];
+        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self postNotification:@"Tunnel disconnected."];
+            [NSApp replyToApplicationShouldTerminate:YES];
+        });
+    });
+
+    return NSTerminateLater;
 }
 
 /*
