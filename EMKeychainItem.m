@@ -153,10 +153,12 @@ static BOOL _logsErrors;
 		return nil;
 
 	NSDictionary *query = @{
-		(__bridge id)kSecClass: (__bridge id)kSecClassGenericPassword,
-		(__bridge id)kSecAttrService: serviceName,
-		(__bridge id)kSecAttrAccount: username,
-		(__bridge id)kSecValueData: [password dataUsingEncoding:NSUTF8StringEncoding],
+		(__bridge id)kSecClass:          (__bridge id)kSecClassGenericPassword,
+		(__bridge id)kSecAttrService:    serviceName,
+		(__bridge id)kSecAttrAccount:    username,
+		(__bridge id)kSecValueData:      [password dataUsingEncoding:NSUTF8StringEncoding],
+		// Prevent this device's SSH passwords from syncing via iCloud Keychain
+		(__bridge id)kSecAttrAccessible: (__bridge id)kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
 	};
 
 	OSStatus status = SecItemAdd((__bridge CFDictionaryRef)query, NULL);
@@ -274,10 +276,12 @@ static BOOL _logsErrors;
 		return nil;
 
 	NSMutableDictionary *query = [NSMutableDictionary dictionaryWithObjectsAndKeys:
-		(__bridge id)kSecClassInternetPassword, (__bridge id)kSecClass,
-		server, (__bridge id)kSecAttrServer,
-		username, (__bridge id)kSecAttrAccount,
-		[password dataUsingEncoding:NSUTF8StringEncoding], (__bridge id)kSecValueData,
+		(__bridge id)kSecClassInternetPassword,                              (__bridge id)kSecClass,
+		server,                                                              (__bridge id)kSecAttrServer,
+		username,                                                            (__bridge id)kSecAttrAccount,
+		[password dataUsingEncoding:NSUTF8StringEncoding],                   (__bridge id)kSecValueData,
+		// Prevent SSH passwords from syncing via iCloud Keychain
+		(__bridge id)kSecAttrAccessibleWhenUnlockedThisDeviceOnly,           (__bridge id)kSecAttrAccessible,
 		nil];
 
 	if (path && path.length > 0)
